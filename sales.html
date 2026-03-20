@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>CADY Sales Dashboard System — v3</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+/* ═══════════════════════════════════════
+   SALESFORCE LIGHTNING DESIGN SYSTEM
+   CADY Sales Dashboard System — v3
+═══════════════════════════════════════ */
+:root{
+  /* SF Brand */
+  --sf-navy:    #032D60;
+  --sf-blue:    #0070D2;
+  --sf-blue-l:  #1B96FF;
+  --sf-blue-xl: #E8F4FF;
+  --sf-blue-xxl:#F3F9FF;
+
+  /* SF Neutrals */
+  --sf-bg:      #F3F3F3;
+  --sf-white:   #FFFFFF;
+  --sf-border:  #DDDBDA;
+  --sf-border-d:#C9C7C5;
+  --sf-text:    #080707;
+  --sf-weak:    #3E3E3C;
+  --sf-muted:   #706E6B;
+  --sf-dim:     #B0ADAB;
+
+  /* SF Status */
+  --sf-green:   #2E844A;  --sf-green-l: #EEF6EC;
+  --sf-yellow:  #DD7A01;  --sf-yellow-l:#FEF4E5;
+  --sf-red:     #BA0517;  --sf-red-l:   #FDEDEE;
+  --sf-orange:  #E07000;  --sf-orange-l:#FEF4E5;
+  --sf-purple:  #9050E9;  --sf-purple-l:#F3EBFF;
+  --sf-teal:    #06A59A;  --sf-teal-l:  #E7F7F6;
+  --sf-gold:    #A07000;  --sf-gold-l:  #FEF9E5;
+
+  /* v3 variable aliases → all inline style="" refs keep working */
+  --bg:      #F3F3F3;
+  --surface: #FFFFFF;
+  --card:    #FFFFFF;
+  --card2:   #F3F3F3;
+  --border:  #DDDBDA;
+  --border2: #C9C7C5;
+  --text:    #080707;
+  --muted:   #706E6B;
+  --dim:     #B0ADAB;
+  --blue:    #0070D2;
+  --cyan:    #1B96FF;
+  --green:   #2E844A;
+  --yellow:  #DD7A01;
+  --orange:  #E07000;
+  --red:     #BA0517;
+  --gold:    #A07000;
+  --purple:  #9050E9;
+  --teal:    #06A59A;
+
+  --font:'Inter','Salesforce Sans',sans-serif;
+  --mono:'DM Mono',monospace;
+  --r:6px;
+  --sh:0 2px 4px rgba(0,0,0,.08);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--sf-bg)}
+body{
+  background:var(--sf-bg);color:var(--sf-text);
+  font-family:var(--font);font-size:13px;min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* SHELL */
+.shell{
+  background:var(--sf-navy);height:52px;padding:0 20px;
+  display:flex;align-items:center;gap:14px;
+  position:sticky;top:0;z-index:300;
+  box-shadow:0 2px 8px rgba(3,45,96,.3);
+}
+.logo{font-size:14px;font-weight:700;color:#fff;display:flex;align-items:center;gap:8px}
+.logo-box{
+  width:32px;height:32px;
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);
+  border-radius:6px;display:grid;place-items:center;
+}
+.pill{
+  background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);
+  border-radius:20px;padding:3px 10px;font-size:11px;color:rgba(255,255,255,.8);
+}
+.shell-r{margin-left:auto;font-size:11px;color:rgba(255,255,255,.55);font-family:var(--mono)}
+.shell-r strong{color:rgba(255,255,255,.85)}
+
+/* PRIMARY TAB NAV */
+.tabs-primary{
+  background:var(--sf-white);border-bottom:1px solid var(--sf-border);
+  padding:0 20px;display:flex;overflow-x:auto;
+  position:sticky;top:52px;z-index:200;
+  scrollbar-width:none;-webkit-overflow-scrolling:touch;
+}
+.tabs-primary::-webkit-scrollbar{display:none}
+.tab-p{
+  padding:13px 16px;font-size:12px;font-weight:500;color:var(--sf-muted);
+  cursor:pointer;border:none;background:none;
+  border-bottom:2px solid transparent;margin-bottom:-1px;
+  transition:color .15s,border-color .15s;
+  font-family:var(--font);white-space:nowrap;
+  -webkit-tap-highlight-color:transparent;
+}
+.tab-p:hover{color:var(--sf-text)}
+.tab-p.on{color:var(--sf-blue);border-bottom-color:var(--sf-blue);font-weight:700}
+.tab-p.farm.on{color:var(--sf-green);border-bottom-color:var(--sf-green)}
+.tab-p.hunt.on{color:var(--sf-teal);border-bottom-color:var(--sf-teal)}
+
+/* PANES */
+.pane{display:none;padding:16px 20px 60px}
+.pane.on{display:block}
+
+/* MODE BADGE */
+.mode-badge{
+  display:flex;align-items:center;gap:10px;padding:10px 14px;
+  border-radius:var(--r);margin-bottom:14px;border:1px solid;
+}
+.mode-farm{background:var(--sf-green-l);border-color:rgba(46,132,74,.3)}
+.mode-hunt{background:var(--sf-teal-l);border-color:rgba(6,165,154,.3)}
+.mode-icon{font-size:22px}
+.mode-title{font-size:14px;font-weight:700}
+.mode-sub{font-size:11px;color:var(--sf-muted);margin-top:2px}
+
+/* AUDIENCE */
+.audience{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--sf-blue-xl);border:1px solid rgba(0,112,210,.2);
+  border-radius:var(--r);padding:5px 12px;font-size:11px;
+  color:var(--sf-blue);margin-bottom:14px;
+}
+.audience strong{font-weight:700}
+
+/* FILTER BAR */
+.fbar{
+  display:flex;flex-wrap:wrap;gap:10px;align-items:center;
+  background:var(--sf-white);border:1px solid var(--sf-border);
+  border-radius:var(--r);padding:10px 14px;margin-bottom:14px;
+  box-shadow:0 1px 3px rgba(0,0,0,.06);
+}
+.fl{font-size:10px;color:var(--sf-muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.fs{
+  background:var(--sf-white);border:1px solid var(--sf-border-d);
+  border-radius:var(--r);color:var(--sf-text);font-family:var(--font);
+  font-size:12px;padding:5px 10px;cursor:pointer;outline:none;
+}
+.fs:focus{border-color:var(--sf-blue);box-shadow:0 0 0 2px rgba(0,112,210,.2)}
+.fright{margin-left:auto;font-size:11px;color:var(--sf-muted);font-family:var(--mono);display:flex;align-items:center;gap:6px}
+.fright strong{color:var(--sf-blue);font-weight:600}
+.live-dot{width:8px;height:8px;background:var(--sf-green);border-radius:50%;box-shadow:0 0 0 2px rgba(46,132,74,.2)}
+
+/* SECTION LABEL */
+.sl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--sf-muted);padding:14px 0 8px;display:flex;align-items:center;gap:10px}
+.sl::after{content:'';flex:1;height:1px;background:var(--sf-border)}
+.sl.farm-sl{color:var(--sf-green)}
+.sl.farm-sl::after{background:rgba(46,132,74,.2)}
+.sl.hunt-sl{color:var(--sf-teal)}
+.sl.hunt-sl::after{background:rgba(6,165,154,.2)}
+
+/* RESPONSIVE GRID */
+.g{display:grid;gap:12px}
+.g2{grid-template-columns:repeat(2,1fr)}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)}
+.g5{grid-template-columns:repeat(5,1fr)}
+.g21{grid-template-columns:2fr 1fr}
+.g12{grid-template-columns:1fr 2fr}
+.g211{grid-template-columns:2fr 1fr 1fr}
+.g31{grid-template-columns:3fr 1fr}
+.mb{margin-bottom:12px}
+
+@media(max-width:1000px){
+  .g5{grid-template-columns:repeat(3,1fr)}
+  .g211{grid-template-columns:1fr 1fr}
+}
+@media(max-width:768px){
+  .g5,.g4{grid-template-columns:repeat(2,1fr)}
+  .g3{grid-template-columns:repeat(2,1fr)}
+  .g21,.g12,.g211,.g31{grid-template-columns:1fr}
+}
+@media(max-width:480px){
+  .g5,.g4,.g3,.g2{grid-template-columns:1fr}
+  .pane{padding:12px 14px 50px}
+  .shell{padding:0 14px;gap:10px}
+  .shell .pill:last-of-type{display:none}
+  .shell-r{display:none}
+  .fbar{flex-direction:column;align-items:stretch}
+  .fl{display:none}
+  .fright{margin-left:0}
+  .tabs-primary{padding:0 12px}
+  .tab-p{padding:11px 12px;font-size:11px}
+}
+
+/* CARD */
+.card{
+  background:var(--sf-white);border:1px solid var(--sf-border);
+  border-radius:var(--r);padding:14px;
+  box-shadow:0 1px 3px rgba(0,0,0,.07);
+  position:relative;overflow:hidden;
+}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:transparent}
+.ca-blue::before{background:var(--sf-blue)}
+.ca-cyan::before{background:var(--sf-blue-l)}
+.ca-green::before{background:var(--sf-green)}
+.ca-gold::before{background:var(--sf-gold)}
+.ca-red::before{background:var(--sf-red)}
+.ca-yellow::before{background:var(--sf-yellow)}
+.ca-purple::before{background:var(--sf-purple)}
+.ca-teal::before{background:var(--sf-teal)}
+.ca-orange::before{background:var(--sf-orange)}
+.card.farm-card{border-left:3px solid var(--sf-green)}
+.card.hunt-card{border-left:3px solid var(--sf-teal)}
+
+.ch{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:9px;gap:8px}
+.ct{font-size:11px;font-weight:700;color:var(--sf-muted);text-transform:uppercase;letter-spacing:.5px}
+.cs{font-size:10px;color:var(--sf-dim);margin-top:2px}
+.clink{font-size:10px;color:var(--sf-blue);cursor:pointer;font-family:var(--mono);white-space:nowrap;font-weight:500}
+.clink:hover{color:var(--sf-navy);text-decoration:underline}
+
+/* KPI */
+.kv{font-size:28px;font-weight:700;font-family:var(--mono);line-height:1;color:var(--sf-text);margin:4px 0 3px}
+.kv.lg{font-size:38px}.kv.sm{font-size:22px}.kv.xs{font-size:17px}
+.kgoal{font-size:11px;color:var(--sf-muted);margin-bottom:6px}
+.kgoal span{font-family:var(--mono);color:var(--sf-text);font-weight:600}
+
+/* PROGRESS */
+.pt{height:6px;background:var(--sf-bg);border:1px solid var(--sf-border);border-radius:3px;overflow:hidden;margin-bottom:3px}
+.pf{height:100%;border-radius:3px}
+.pl{display:flex;justify-content:space-between;font-size:10px;font-family:var(--mono);color:var(--sf-muted)}
+.pb{background:var(--sf-blue)}
+.pg{background:var(--sf-green)}
+.po{background:var(--sf-gold)}
+.pr{background:var(--sf-red)}
+.pc{background:var(--sf-blue-l)}
+.pp{background:var(--sf-purple)}
+.pt2{background:var(--sf-teal)}
+.porg{background:var(--sf-orange)}
+
+/* WEEKLY VISIT TRACKER */
+.visit-week{display:flex;gap:4px;margin:8px 0}
+.vday{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px}
+.vday-label{font-size:9px;color:var(--sf-muted);font-family:var(--mono)}
+.vday-bar{width:100%;border-radius:3px;transition:height .3s}
+.vday-count{font-size:9px;font-family:var(--mono);color:var(--sf-muted)}
+.visit-track-wrap{height:50px;width:100%;display:flex;align-items:flex-end}
+.visit-bar-inner{width:100%;border-radius:3px 3px 0 0}
+
+/* TABLE */
+.dt{width:100%;border-collapse:collapse}
+.dt th{
+  font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;
+  color:var(--sf-muted);padding:7px 10px;
+  border-bottom:2px solid var(--sf-border);
+  text-align:left;white-space:nowrap;
+  background:#FAFAFA;cursor:pointer;user-select:none;
+}
+.dt th:hover{color:var(--sf-blue);background:var(--sf-blue-xl)}
+.dt td{
+  padding:8px 10px;font-size:12px;
+  border-bottom:1px solid var(--sf-border);
+  color:var(--sf-text);
+}
+.dt tr:last-child td{border-bottom:none}
+.dt tr:hover td{background:var(--sf-blue-xxl)}
+.tdl{color:var(--sf-blue);cursor:pointer;font-weight:500}
+.tdl:hover{color:var(--sf-navy);text-decoration:underline}
+.tdm{font-family:var(--mono);font-size:11px}
+.tdr{text-align:right}.tdc{text-align:center}
+.scroll-t{overflow-y:auto;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.scroll-t::-webkit-scrollbar{width:4px;height:4px}
+.scroll-t::-webkit-scrollbar-thumb{background:var(--sf-border-d);border-radius:2px}
+
+/* RISK / CHIP */
+.risk{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:600;font-family:var(--mono)}
+.risk::before{content:'●';font-size:7px}
+.r-hi{background:var(--sf-red-l);color:var(--sf-red)}
+.r-md{background:var(--sf-yellow-l);color:var(--sf-yellow)}
+.r-ok{background:var(--sf-green-l);color:var(--sf-green)}
+.chip{display:inline-block;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:600}
+.chip-b{background:var(--sf-blue-xl);color:var(--sf-blue)}
+.chip-g{background:var(--sf-green-l);color:var(--sf-green)}
+.chip-y{background:var(--sf-yellow-l);color:var(--sf-yellow)}
+.chip-r{background:var(--sf-red-l);color:var(--sf-red)}
+.chip-m{background:var(--sf-bg);color:var(--sf-muted);border:1px solid var(--sf-border)}
+.chip-p{background:var(--sf-purple-l);color:var(--sf-purple)}
+.chip-t{background:var(--sf-teal-l);color:var(--sf-teal)}
+.chip-o{background:var(--sf-orange-l);color:var(--sf-orange)}
+.chip-new-adv{background:var(--sf-orange-l);color:var(--sf-orange);border:1px solid rgba(224,112,0,.3);font-size:10px;padding:3px 8px;border-radius:20px;font-weight:700}
+
+/* LEADERBOARD */
+.ldr{display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid var(--sf-border)}
+.ldr:last-child{border-bottom:none}
+.ldr-rank{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:10px;font-weight:700;font-family:var(--mono);flex-shrink:0}
+.rk1{background:var(--sf-navy);color:#fff}
+.rk2{background:var(--sf-blue);color:#fff}
+.rk3{background:var(--sf-muted);color:#fff}
+.rk-n{background:var(--sf-bg);color:var(--sf-muted);border:1px solid var(--sf-border)}
+.ldr-name{flex:1}.ldr-nm{font-size:12px;font-weight:600;color:var(--sf-text)}.ldr-reg{font-size:10px;color:var(--sf-muted)}
+.ldr-bar{flex:1.2;height:5px;background:var(--sf-bg);border:1px solid var(--sf-border);border-radius:4px;overflow:hidden}
+.ldr-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--sf-navy),var(--sf-blue))}
+.ldr-val{font-family:var(--mono);font-size:12px;font-weight:700;text-align:right;min-width:52px;color:var(--sf-text)}
+.ldr-ct{font-size:10px;color:var(--sf-muted);text-align:right;min-width:24px;font-family:var(--mono)}
+
+/* INLINE METRIC */
+.im-row{display:flex;gap:8px}
+.im{flex:1;background:var(--sf-bg);border:1px solid var(--sf-border);border-radius:var(--r);padding:8px 9px;text-align:center}
+.im-v{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--sf-text);line-height:1}
+.im-l{font-size:9px;color:var(--sf-muted);margin-top:3px;text-transform:uppercase;letter-spacing:.3px}
+
+/* FUNNEL */
+.fn{display:flex;flex-direction:column;gap:4px}
+.fn-row{display:flex;align-items:center;gap:7px}
+.fn-meta{width:110px;flex-shrink:0}
+.fn-stage{font-size:10px;color:var(--sf-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fn-amt{font-size:11px;font-family:var(--mono);color:var(--sf-text)}
+.fn-track{flex:1;height:25px}
+.fn-bar{height:100%;border-radius:3px;display:flex;align-items:center;padding-left:8px;font-size:11px;font-weight:600;font-family:var(--mono);color:#fff;min-width:32px}
+
+/* TRIPLE (3×) */
+.triple-wrap{display:flex;flex-direction:column;gap:7px;margin-top:6px}
+.triple-row{display:flex;align-items:center;gap:8px}
+.triple-label{font-size:11px;color:var(--sf-muted);width:76px;flex-shrink:0}
+.triple-track{flex:1;height:8px;background:var(--sf-bg);border:1px solid var(--sf-border);border-radius:4px;overflow:hidden;position:relative}
+.triple-fill{height:100%;border-radius:4px}
+.triple-line{position:absolute;top:0;bottom:0;width:2px;background:rgba(0,0,0,.2)}
+.triple-val{font-family:var(--mono);font-size:11px;min-width:40px;text-align:right;font-weight:600}
+
+/* REP COMPARE */
+.rep-row{display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid var(--sf-border)}
+.rep-row:last-child{border-bottom:none}
+.rep-name{font-size:12px;font-weight:600;width:120px;flex-shrink:0;color:var(--sf-text)}
+.rep-bars{flex:1;display:flex;flex-direction:column;gap:4px}
+.rep-bar-row{display:flex;align-items:center;gap:5px}
+.rep-bar-label{font-size:9px;color:var(--sf-dim);width:50px;flex-shrink:0;text-align:right}
+.rep-track{flex:1;height:6px;background:var(--sf-bg);border:1px solid var(--sf-border);border-radius:3px;overflow:hidden}
+.rep-fill{height:100%;border-radius:3px}
+.rep-stat{font-family:var(--mono);font-size:10px;min-width:36px;text-align:right;font-weight:600}
+
+/* SCHOOL PROFILE BARS */
+.profile-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--sf-border)}
+.profile-row:last-child{border-bottom:none}
+.profile-label{font-size:11px;font-weight:600;width:110px;flex-shrink:0}
+.profile-bar-wrap{flex:1;height:18px;background:var(--sf-bg);border:1px solid var(--sf-border);border-radius:3px;overflow:hidden}
+.profile-bar{height:100%;border-radius:3px;display:flex;align-items:center;padding-left:7px;font-size:10px;font-weight:600;font-family:var(--mono);color:#fff}
+.profile-count{font-family:var(--mono);font-size:11px;min-width:44px;text-align:right;color:var(--sf-muted)}
+
+/* GENERATION */
+.gen-badge{display:flex;flex-direction:column;gap:5px}
+.gen-row{display:flex;align-items:center;gap:8px}
+.gen-label{font-size:10px;color:var(--sf-muted);width:100px;flex-shrink:0}
+.gen-bar-wrap{flex:1;height:14px;background:var(--sf-bg);border:1px solid var(--sf-border);border-radius:3px;overflow:hidden}
+.gen-bar{height:100%;border-radius:3px;display:flex;align-items:center;padding-left:6px;font-size:9px;font-weight:600;color:#fff;font-family:var(--mono)}
+.gen-count{font-family:var(--mono);font-size:10px;min-width:38px;text-align:right;color:var(--sf-muted)}
+
+/* DIGITAL MARKETING */
+.dmark-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--sf-border)}
+.dmark-row:last-child{border-bottom:none}
+.dmark-school{flex:1;font-size:11px;color:var(--sf-text)}
+.dmark-opens{font-family:var(--mono);font-size:11px;min-width:30px;text-align:right;color:var(--sf-text);font-weight:600}
+.dmark-bar-wrap{width:70px;height:6px;background:var(--sf-bg);border:1px solid var(--sf-border);border-radius:3px;overflow:hidden}
+.dmark-bar{height:100%;border-radius:3px;background:var(--sf-purple)}
+
+/* ALERT BANNERS */
+.alert{background:var(--sf-red-l);border:1px solid rgba(186,5,23,.3);border-radius:var(--r);padding:10px 14px;font-size:12px;color:var(--sf-red);display:flex;align-items:flex-start;gap:8px;margin-bottom:12px}
+.info{background:var(--sf-blue-xl);border:1px solid rgba(0,112,210,.25);border-radius:var(--r);padding:10px 14px;font-size:12px;color:var(--sf-blue);display:flex;align-items:flex-start;gap:8px;margin-bottom:12px}
+.warn{background:var(--sf-yellow-l);border:1px solid rgba(221,122,1,.3);border-radius:var(--r);padding:10px 14px;font-size:12px;color:var(--sf-yellow);display:flex;align-items:flex-start;gap:8px;margin-bottom:12px}
+.success{background:var(--sf-green-l);border:1px solid rgba(46,132,74,.3);border-radius:var(--r);padding:10px 14px;font-size:12px;color:var(--sf-green);display:flex;align-items:flex-start;gap:8px;margin-bottom:12px}
+
+/* NEW ADVISER ALERT CARD */
+.new-adv-card{background:var(--sf-orange-l);border:1px solid rgba(224,112,0,.3);border-radius:var(--r);padding:14px;box-shadow:var(--sh)}
+.new-adv-header{font-size:11px;font-weight:700;color:var(--sf-orange);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+
+/* LOSS AMOUNT */
+.loss-amt{font-family:var(--mono);font-size:11px;color:var(--sf-red);font-weight:700}
+
+/* RLINKS */
+.rlinks{display:flex;flex-direction:column;gap:8px}
+.rlink{display:flex;align-items:flex-start;gap:7px;font-size:12px}
+.rnum{font-family:var(--mono);color:var(--sf-blue);font-weight:700;min-width:16px}
+.rtxt{color:var(--sf-text)}.rsub{font-size:10px;color:var(--sf-muted);margin-top:2px}
+
+/* DONUT LEGEND */
+.dleg{display:flex;flex-direction:column;gap:5px;margin-top:7px}
+.dleg-row{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--sf-text)}
+.dleg-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.dleg-val{margin-left:auto;font-family:var(--mono);font-weight:600}
+
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--sf-border-d);border-radius:3px}
+canvas{max-width:100%}
+</style>
+</head>
+<body>
+
+<!-- SHELL -->
+<div class="shell">
+  <div class="logo">
+    <div class="logo-box">
+      <svg width="20" height="16" viewBox="0 0 52 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M21.7 7.3C23.5 5.2 26.1 4 29 4c4.5 0 8.4 2.8 10.1 6.8.8-.3 1.7-.5 2.6-.5 4 0 7.3 3.3 7.3 7.3 0 4-3.3 7.3-7.3 7.3H12.7C8.4 24.9 5 21.5 5 17.2c0-3.8 2.7-6.9 6.3-7.6-.1-.5-.1-1-.1-1.5C11.2 4 14.5.7 18.5.7c1.5 0 2.8.4 4 1.1" stroke="white" stroke-width="1.8" stroke-linejoin="round" fill="rgba(255,255,255,.15)"/>
+      </svg>
+    </div>
+    CADY Sales Cloud
+  </div>
+
+  <div class="shell-r">Mar 19, 2026 &nbsp;|&nbsp; <strong>Salesforce Lightning</strong></div>
+</div>
+
+<!-- PRIMARY TABS -->
+<div class="tabs-primary">
+  <button class="tab-p on"  onclick="go('exec',this)">📈 Executive (Philip)</button>
+  <button class="tab-p"     onclick="go('pace',this)">🎯 Pace Curve</button>
+  <button class="tab-p"     onclick="go('regional',this)">🗺️ Regional Director</button>
+  <button class="tab-p farm" onclick="go('farm',this)">🌾 Rep: My Customers</button>
+  <button class="tab-p hunt" onclick="go('hunt',this)">🎯 Rep: My Prospects</button>
+  <button class="tab-p"     onclick="go('bdr',this)">📞 Inside Sales / BDR</button>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     EXECUTIVE
+══════════════════════════════════════════ -->
+<div id="pane-exec" class="pane on">
+  <div class="audience">👁 <strong>Audience:</strong> Philip Kennedy + VP Leadership — signal only, no rep-level detail</div>
+  <div class="warn">⚠️ <strong>Pipeline Coverage Alert:</strong> 75%+ stage pipeline is $14.2M against a $42M two-month need. Currently at <strong>0.9×</strong> — critical gap. 3× is required.</div>
+
+  <div class="sl">Core KPIs — SY27 Year to Date</div>
+  <div class="g g5 mb">
+    <div class="card ca-blue"><div class="ch"><div><div class="ct">Total Revenue</div><div class="cs">vs $160M annual plan</div></div><span class="clink">View →</span></div><div class="kv">$119.8M</div><div class="kgoal">Plan: <span>$160M</span> · Gap: <span style="color:var(--yellow)">$40.2M</span></div><div class="pt"><div class="pf pb" style="width:74.9%"></div></div><div class="pl"><span style="color:var(--blue)">74.9%</span><span style="color:var(--muted)">$160M</span></div></div>
+    <div class="card ca-green"><div class="ch"><div><div class="ct">Renewal Rate</div><div class="cs">vs 95% retention goal</div></div><span class="clink">View →</span></div><div class="kv" style="color:var(--green)">94.7%</div><div class="kgoal">Goal: <span>95%</span> · Gap: <span style="color:var(--orange)">−0.3 pts</span></div><div class="pt"><div class="pf pg" style="width:99.7%"></div></div><div class="pl"><span style="color:var(--green)">99.7% to goal</span></div></div>
+    <div class="card ca-gold"><div class="ch"><div><div class="ct">Schools Signed</div><div class="cs">vs 1,400 unit goal</div></div><span class="clink">View →</span></div><div class="kv" style="color:var(--gold)">1,164</div><div class="kgoal">Goal: <span>1,400</span> · Left: <span style="color:var(--yellow)">236</span></div><div class="pt"><div class="pf po" style="width:83.1%"></div></div><div class="pl"><span style="color:var(--gold)">83.1%</span></div></div>
+    <div class="card ca-teal"><div class="ch"><div><div class="ct">New Business</div><div class="cs">vs new logo plan</div></div><span class="clink">View →</span></div><div class="kv" style="color:var(--teal)">$8.9M</div><div class="kgoal">Plan: <span>$120M</span> · Achievement: <span style="color:var(--red)">7.4%</span></div><div class="pt"><div class="pf pt2" style="width:7.4%"></div></div><div class="pl"><span style="color:var(--red)">7.4% — Needs Attention</span></div></div>
+    <div class="card ca-red"><div class="ch"><div><div class="ct">No Engagement 100d+</div><div class="cs">target &lt;100</div></div><span class="clink">View →</span></div><div class="kv" style="color:var(--red)">249</div><div class="kgoal">Over by: <span style="color:var(--red)">149 accounts</span></div><div class="pt"><div class="pf pr" style="width:100%"></div></div><div class="pl"><span style="color:var(--red)">149 over threshold</span></div></div>
+  </div>
+
+  <!-- RENEWAL KPI: Goal vs LY vs YTD — Philip's requested report -->
+  <div class="sl">Renewal KPI — Goal vs Prior Year vs YTD (Philip's Request)</div>
+  <div class="g g3 mb">
+    <div class="card ca-green"><div class="ch"><div><div class="ct">Renewal Revenue — Monthly</div><div class="cs">Goal · LY Actual · CY YTD</div></div><span class="clink">View →</span></div><div style="position:relative;height:155px"><canvas id="renewalKpi"></canvas></div></div>
+    <div class="card ca-blue"><div class="ch"><div><div class="ct">Renewal Rate Trend</div><div class="cs">CY vs LY vs 95% goal</div></div><span class="clink">View →</span></div><div style="position:relative;height:155px"><canvas id="renewalRate"></canvas></div></div>
+    <div class="card ca-gold">
+      <div class="ch"><div><div class="ct">Unrenewed — Past Decision Date</div><div class="cs">Revenue at risk — loss framing</div></div><span class="clink">Full List →</span></div>
+      <div class="im-row mb" style="margin-bottom:10px">
+        <div class="im"><div class="im-v" style="color:var(--red)">$887k</div><div class="im-l">Past Due Revenue</div></div>
+        <div class="im"><div class="im-v" style="color:var(--yellow)">$2.1M</div><div class="im-l">Due This Mo.</div></div>
+      </div>
+      <div class="scroll-t" style="max-height:75px">
+        <table class="dt"><thead><tr><th>School</th><th>Lost Revenue</th><th>Days OD</th></tr></thead>
+        <tbody>
+          <tr><td class="tdl" style="font-size:10px">Mabank High School</td><td class="loss-amt">$25.1k</td><td><span class="risk r-hi">154d</span></td></tr>
+          <tr><td class="tdl" style="font-size:10px">A.B. Miller HS</td><td class="loss-amt">$23.8k</td><td><span class="risk r-hi">91d</span></td></tr>
+          <tr><td class="tdl" style="font-size:10px">Matt Elementary</td><td class="loss-amt">$32.7k</td><td><span class="risk r-hi">154d</span></td></tr>
+        </tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <div class="g g211 mb">
+    <div class="card ca-cyan"><div class="ch"><div><div class="ct">Monthly Signed Schools — SY27</div><div class="cs">Apr 2025 – Mar 2026</div></div><span class="clink">View →</span></div><div style="position:relative;height:148px"><canvas id="signedMonthly"></canvas></div></div>
+    <div class="card ca-gold">
+      <div class="ch"><div><div class="ct">Leaderboard — Top 5</div><div class="cs">SY27 Closed/Won Revenue</div></div><span class="clink">Full →</span></div>
+      <div class="ldr"><div class="ldr-rank rk1">1</div><div class="ldr-name"><div class="ldr-nm">Vanida Zdanowicz</div><div class="ldr-reg">Southeast</div></div><div class="ldr-bar"><div class="ldr-fill" style="width:100%"></div></div><div class="ldr-val" style="color:var(--gold)">$6.71M</div><div class="ldr-ct">77</div></div>
+      <div class="ldr"><div class="ldr-rank rk2">2</div><div class="ldr-name"><div class="ldr-nm">Jena Weber</div><div class="ldr-reg">Southwest</div></div><div class="ldr-bar"><div class="ldr-fill" style="width:98%"></div></div><div class="ldr-val">$6.61M</div><div class="ldr-ct">63</div></div>
+      <div class="ldr"><div class="ldr-rank rk3">3</div><div class="ldr-name"><div class="ldr-nm">Kelly Langham</div><div class="ldr-reg">Southeast</div></div><div class="ldr-bar"><div class="ldr-fill" style="width:94%"></div></div><div class="ldr-val">$6.28M</div><div class="ldr-ct">42</div></div>
+      <div class="ldr"><div class="ldr-rank rk-n">4</div><div class="ldr-name"><div class="ldr-nm">Amanda English</div><div class="ldr-reg">Southeast</div></div><div class="ldr-bar"><div class="ldr-fill" style="width:90%"></div></div><div class="ldr-val">$6.06M</div><div class="ldr-ct">54</div></div>
+      <div class="ldr"><div class="ldr-rank rk-n">5</div><div class="ldr-name"><div class="ldr-nm">Mary Jane Johnson</div><div class="ldr-reg">Southwest</div></div><div class="ldr-bar"><div class="ldr-fill" style="width:89%"></div></div><div class="ldr-val">$6.01M</div><div class="ldr-ct">40</div></div>
+    </div>
+    <div class="card ca-blue"><div class="ch"><div><div class="ct">Won by Region</div><div class="cs">$119.8M Total</div></div><span class="clink">View →</span></div>
+      <div style="position:relative;height:148px"><canvas id="regionDonut"></canvas></div>
+      <div class="dleg">
+        <div class="dleg-row"><div class="dleg-dot" style="background:var(--blue)"></div>Southeast<div class="dleg-val">$73.2M</div></div>
+        <div class="dleg-row"><div class="dleg-dot" style="background:var(--green)"></div>Southwest<div class="dleg-val">$21.8M</div></div>
+        <div class="dleg-row"><div class="dleg-dot" style="background:var(--yellow)"></div>Northeast<div class="dleg-val">$11.8M</div></div>
+        <div class="dleg-row"><div class="dleg-dot" style="background:var(--purple)"></div>West Coast<div class="dleg-val">$7.3M</div></div>
+        <div class="dleg-row"><div class="dleg-dot" style="background:var(--orange)"></div>Mid-Atlantic<div class="dleg-val">$5.7M</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     PACE CURVE
+══════════════════════════════════════════ -->
+<div id="pane-pace" class="pane">
+  <div class="audience">👁 <strong>Audience:</strong> Philip + Regional Directors — velocity model, pipeline coverage, forward risk</div>
+  <div class="warn">⚠️ <strong>Pace Risk:</strong> SY27 is tracking ~$12M below historical pace. Full-year shortfall estimated at $18–22M at current trajectory.</div>
+
+  <div class="sl">Velocity Pace Model — Actual Signed % vs Historical Monthly %</div>
+  <div class="g g21 mb">
+    <div class="card ca-cyan"><div class="ch"><div><div class="ct">Pace Curve</div><div class="cs">Cumulative % of plan · Historical avg vs SY27</div></div><span class="clink">View →</span></div><div style="position:relative;height:200px"><canvas id="paceCurve"></canvas></div></div>
+    <div class="card ca-blue">
+      <div class="ch"><div><div class="ct">Pace Indicators</div></div></div>
+      <div style="background:var(--sf-red-l);border:1px solid rgba(186,5,23,.25);border-radius:6px;padding:10px 12px;margin-bottom:10px"><div style="font-size:12px;font-weight:600;color:var(--red)">⚠ Behind Historical Pace</div><div style="font-size:11px;color:var(--muted);margin-top:3px">$12M below curve at this point in year</div></div>
+      <div class="im-row mb" style="margin-bottom:9px"><div class="im"><div class="im-v" style="color:var(--cyan)">$119.8M</div><div class="im-l">Actual Signed</div></div><div class="im"><div class="im-v" style="color:var(--muted)">$131.4M</div><div class="im-l">Historical Pace</div></div></div>
+      <div class="im-row"><div class="im"><div class="im-v" style="color:var(--yellow)">74.9%</div><div class="im-l">% of Plan Now</div></div><div class="im"><div class="im-v" style="color:var(--muted)">82.1%</div><div class="im-l">Historical % Now</div></div></div>
+      <div style="font-size:10px;color:var(--dim);margin-top:10px;line-height:1.6">Matthew Clark methodology: monthly % distribution of annual plan. Requires monthly plan target records in Salesforce.</div>
+    </div>
+  </div>
+
+  <div class="sl">3× Pipeline Coverage Rule — 75%+ Stage · 2-Month Forward View</div>
+  <div class="g g3 mb">
+    <div class="card ca-red">
+      <div class="ch"><div><div class="ct">3× Rule — Current Status</div><div class="cs">Need 3× plan in 75%+ pipeline · 2 months out</div></div></div>
+      <div class="kv" style="color:var(--red)">0.9<span style="font-size:16px;color:var(--muted)">× / 3.0× needed</span></div>
+      <div class="kgoal" style="margin-top:5px">2-Month Target: <span>$42M</span> · 75%+ Pipeline: <span style="color:var(--red)">$14.2M</span></div>
+      <div class="pt" style="height:8px"><div class="pf pr" style="width:33.8%"></div></div>
+      <div class="pl"><span style="color:var(--red)">33.8% of needed coverage</span></div>
+      <div style="margin-top:9px;padding:8px;background:var(--sf-red-l);border:1px solid rgba(186,5,23,.2);border-radius:6px;font-size:11px;color:var(--sf-red);line-height:1.7">1-in-3 conversion ratio means <strong>3× your 2-month plan</strong> must sit in 75%+ stage. At $14.2M vs $42M needed — critical leadership action required.</div>
+    </div>
+    <div class="card ca-blue">
+      <div class="ch"><div><div class="ct">75%+ Coverage by Region</div><div class="cs">White line = 1× · Target is 3×</div></div></div>
+      <div class="triple-wrap">
+        <div class="triple-row"><div class="triple-label">Southeast</div><div class="triple-track"><div class="triple-fill" style="width:37%;background:var(--red)"></div><div class="triple-line" style="left:33.3%"></div></div><div class="triple-val" style="color:var(--red)">1.1×</div></div>
+        <div class="triple-row"><div class="triple-label">Southwest</div><div class="triple-track"><div class="triple-fill" style="width:80%;background:var(--green)"></div><div class="triple-line" style="left:33.3%"></div></div><div class="triple-val" style="color:var(--green)">2.4×</div></div>
+        <div class="triple-row"><div class="triple-label">Northeast</div><div class="triple-track"><div class="triple-fill" style="width:53%;background:var(--yellow)"></div><div class="triple-line" style="left:33.3%"></div></div><div class="triple-val" style="color:var(--yellow)">1.6×</div></div>
+        <div class="triple-row"><div class="triple-label">West Coast</div><div class="triple-track"><div class="triple-fill" style="width:100%;background:var(--green)"></div><div class="triple-line" style="left:33.3%"></div></div><div class="triple-val" style="color:var(--green)">3.1×</div></div>
+        <div class="triple-row"><div class="triple-label">Mid-Atlantic</div><div class="triple-track"><div class="triple-fill" style="width:30%;background:var(--red)"></div><div class="triple-line" style="left:33.3%"></div></div><div class="triple-val" style="color:var(--red)">0.9×</div></div>
+      </div>
+    </div>
+    <div class="card ca-purple">
+      <div class="ch"><div><div class="ct">Targeted Prospects Pipeline</div><div class="cs">Estimated Volume by Stage</div></div><span class="clink">View →</span></div>
+      <div class="fn">
+        <div class="fn-row"><div class="fn-meta"><div class="fn-stage">95 Chance</div><div class="fn-amt">$14.2M</div></div><div class="fn-track"><div class="fn-bar" style="width:100%;background:linear-gradient(90deg,var(--green),#60ffb0)">$14.2M</div></div></div>
+        <div class="fn-row"><div class="fn-meta"><div class="fn-stage">75 Chance</div><div class="fn-amt">$86M</div></div><div class="fn-track"><div class="fn-bar" style="width:80%;background:linear-gradient(90deg,var(--cyan),#80eeff)">$86M</div></div></div>
+        <div class="fn-row"><div class="fn-meta"><div class="fn-stage">50 Chance</div><div class="fn-amt">$107M</div></div><div class="fn-track"><div class="fn-bar" style="width:65%;background:linear-gradient(90deg,var(--blue),#80bbff)">$107M</div></div></div>
+        <div class="fn-row"><div class="fn-meta"><div class="fn-stage">25 Chance</div><div class="fn-amt">$95M</div></div><div class="fn-track"><div class="fn-bar" style="width:42%;background:linear-gradient(90deg,var(--yellow),#ffe080)">$95M</div></div></div>
+        <div class="fn-row"><div class="fn-meta"><div class="fn-stage">5 Chance</div><div class="fn-amt">$213M</div></div><div class="fn-track"><div class="fn-bar" style="width:88%;background:linear-gradient(90deg,var(--orange),#ffb080);opacity:.6">$213M</div></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="g g2">
+    <div class="card ca-teal"><div class="ch"><div><div class="ct">Renewal Volume — Plan vs Actual</div></div><span class="clink">View →</span></div><div style="position:relative;height:150px"><canvas id="renewalPace"></canvas></div></div>
+    <div class="card ca-orange"><div class="ch"><div><div class="ct">New Business Volume — Plan vs Actual</div></div><span class="clink">View →</span></div><div style="position:relative;height:150px"><canvas id="newBizPace"></canvas></div></div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     REGIONAL DIRECTOR
+══════════════════════════════════════════ -->
+<div id="pane-regional" class="pane">
+  <div class="audience">👁 <strong>Audience:</strong> Regional Directors — locked to their region · Reps seen side-by-side · Customers and Prospects separated</div>
+  <div class="fbar">
+    <span class="fl">Region</span>
+    <select class="fs" onchange="document.getElementById('rgn').textContent=this.value"><option>Southeast</option><option>Southwest</option><option>Northeast</option><option>West Coast</option><option>Mid-Atlantic</option></select>
+    <div class="fright"><div class="live-dot"></div>Region: <strong id="rgn">Southeast</strong></div>
+  </div>
+
+  <div class="sl">Southeast — Regional Goals</div>
+  <div class="g g4 mb">
+    <div class="card ca-blue"><div class="ch"><div class="ct">Region Revenue</div></div><div class="kv sm">$73.2M</div><div class="kgoal">Quota: <span>$88M</span></div><div class="pt"><div class="pf pb" style="width:83.2%"></div></div><div class="pl"><span style="color:var(--blue)">83.2%</span><span style="color:var(--muted)">$88M</span></div></div>
+    <div class="card ca-green"><div class="ch"><div class="ct">Renewals Closed</div></div><div class="kv sm">312</div><div class="kgoal">Target: <span>380</span></div><div class="pt"><div class="pf pg" style="width:82.1%"></div></div><div class="pl"><span style="color:var(--green)">82.1%</span></div></div>
+    <div class="card ca-gold"><div class="ch"><div class="ct">New Logos</div></div><div class="kv sm">44</div><div class="kgoal">Target: <span>60</span></div><div class="pt"><div class="pf po" style="width:73.3%"></div></div><div class="pl"><span style="color:var(--gold)">73.3%</span></div></div>
+    <div class="card ca-red"><div class="ch"><div class="ct">At-Risk Revenue</div><div class="cs">Loss framing — not just record count</div></div><div class="kv sm" style="color:var(--red)">$1.4M</div><div class="kgoal">In renewal accounts at risk</div><div class="pt"><div class="pf pr" style="width:100%"></div></div><div class="pl"><span style="color:var(--red)">38 accounts · 23 over threshold</span></div></div>
+  </div>
+
+  <div class="sl">School Profile Distribution — Southeast Region</div>
+  <div class="g g3 mb">
+    <div class="card ca-purple">
+      <div class="ch"><div><div class="ct">School Profile Segmentation</div><div class="cs">Award Winning · Engaged · New Adviser · Standard</div></div><span class="clink">View →</span></div>
+      <div style="margin-top:4px">
+        <div class="profile-row"><div class="profile-label" style="color:var(--gold)">🏆 Award Winning</div><div class="profile-bar-wrap"><div class="profile-bar" style="width:3%;background:linear-gradient(90deg,var(--gold),#ffe080)">34</div></div><div class="profile-count">34</div></div>
+        <div class="profile-row"><div class="profile-label" style="color:var(--blue)">💬 Engaged</div><div class="profile-bar-wrap"><div class="profile-bar" style="width:25%;background:linear-gradient(90deg,var(--blue),#80bbff)">295</div></div><div class="profile-count">295</div></div>
+        <div class="profile-row"><div class="profile-label" style="color:var(--orange)">🆕 New Adviser</div><div class="profile-bar-wrap"><div class="profile-bar" style="width:37%;background:linear-gradient(90deg,var(--orange),#ffb080)">4,514</div></div><div class="profile-count">4,514</div></div>
+        <div class="profile-row"><div class="profile-label" style="color:var(--muted)">📋 Standard</div><div class="profile-bar-wrap"><div class="profile-bar" style="width:100%;background:linear-gradient(90deg,#706E6B,#B0ADAB)">13,345</div></div><div class="profile-count">13,345</div></div>
+      </div>
+      <div style="margin-top:9px;padding:7px;background:var(--sf-orange-l);border:1px solid rgba(224,112,0,.2);border-radius:6px;font-size:10px;color:var(--sf-orange);line-height:1.6">⚡ <strong>4,514 New Adviser accounts</strong> — highest renewal risk AND highest relationship opportunity. Prioritize these first.</div>
+    </div>
+    <div class="card ca-teal">
+      <div class="ch"><div><div class="ct">Adviser Generation Mix</div><div class="cs">Informs sales approach per school</div></div><span class="clink">View →</span></div>
+      <div style="position:relative;height:130px"><canvas id="adviserGen"></canvas></div>
+      <div style="margin-top:8px;font-size:10px;color:var(--dim);line-height:1.6">
+        <span style="color:var(--yellow)">●</span> Boomers: Legacy/relationship pitch &nbsp;
+        <span style="color:var(--blue)">●</span> Gen X: ROI-focused &nbsp;
+        <span style="color:var(--cyan)">●</span> Millennial: Digital proof &nbsp;
+        <span style="color:var(--green)">●</span> Gen Z: Needs handholding
+      </div>
+    </div>
+    <div class="card ca-blue">
+      <div class="ch"><div><div class="ct">Rep-by-Rep Comparison</div><div class="cs">Renewal · Pipeline · Visit cadence</div></div><span class="clink">Full →</span></div>
+      <div class="rep-row"><div class="rep-name">Amanda English</div><div class="rep-bars"><div class="rep-bar-row"><div class="rep-bar-label">Renewal %</div><div class="rep-track"><div class="rep-fill" style="width:76%;background:var(--green)"></div></div><div class="rep-stat" style="color:var(--green)">76%</div></div><div class="rep-bar-row"><div class="rep-bar-label">Pipeline</div><div class="rep-track"><div class="rep-fill" style="width:90%;background:var(--blue)"></div></div><div class="rep-stat" style="color:var(--blue)">2.7×</div></div><div class="rep-bar-row"><div class="rep-bar-label">Visits/Wk</div><div class="rep-track"><div class="rep-fill" style="width:85%;background:var(--cyan)"></div></div><div class="rep-stat" style="color:var(--cyan)">17/20</div></div></div><span class="chip chip-g">OK</span></div>
+      <div class="rep-row"><div class="rep-name">Vanida Zdanowicz</div><div class="rep-bars"><div class="rep-bar-row"><div class="rep-bar-label">Renewal %</div><div class="rep-track"><div class="rep-fill" style="width:94%;background:var(--green)"></div></div><div class="rep-stat" style="color:var(--green)">94%</div></div><div class="rep-bar-row"><div class="rep-bar-label">Pipeline</div><div class="rep-track"><div class="rep-fill" style="width:100%;background:var(--blue)"></div></div><div class="rep-stat" style="color:var(--blue)">3.8×</div></div><div class="rep-bar-row"><div class="rep-bar-label">Visits/Wk</div><div class="rep-track"><div class="rep-fill" style="width:100%;background:var(--cyan)"></div></div><div class="rep-stat" style="color:var(--cyan)">20/20</div></div></div><span class="chip chip-g">Top</span></div>
+      <div class="rep-row"><div class="rep-name">Kelly Langham</div><div class="rep-bars"><div class="rep-bar-row"><div class="rep-bar-label">Renewal %</div><div class="rep-track"><div class="rep-fill" style="width:62%;background:var(--yellow)"></div></div><div class="rep-stat" style="color:var(--yellow)">62%</div></div><div class="rep-bar-row"><div class="rep-bar-label">Pipeline</div><div class="rep-track"><div class="rep-fill" style="width:53%;background:var(--yellow)"></div></div><div class="rep-stat" style="color:var(--yellow)">1.6×</div></div><div class="rep-bar-row"><div class="rep-bar-label">Visits/Wk</div><div class="rep-track"><div class="rep-fill" style="width:60%;background:var(--yellow)"></div></div><div class="rep-stat" style="color:var(--yellow)">12/20</div></div></div><span class="chip chip-y">Watch</span></div>
+      <div class="rep-row"><div class="rep-name">Angela Steinhoff</div><div class="rep-bars"><div class="rep-bar-row"><div class="rep-bar-label">Renewal %</div><div class="rep-track"><div class="rep-fill" style="width:38%;background:var(--red)"></div></div><div class="rep-stat" style="color:var(--red)">38%</div></div><div class="rep-bar-row"><div class="rep-bar-label">Pipeline</div><div class="rep-track"><div class="rep-fill" style="width:23%;background:var(--red)"></div></div><div class="rep-stat" style="color:var(--red)">0.7×</div></div><div class="rep-bar-row"><div class="rep-bar-label">Visits/Wk</div><div class="rep-track"><div class="rep-fill" style="width:40%;background:var(--red)"></div></div><div class="rep-stat" style="color:var(--red)">8/20</div></div></div><span class="chip chip-r">Act Now</span></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     REP: MY CUSTOMERS (FARMING MODE)
+══════════════════════════════════════════ -->
+<div id="pane-farm" class="pane">
+  <div class="mode-badge mode-farm">
+    <div class="mode-icon">🌾</div>
+    <div>
+      <div class="mode-title" style="color:var(--green)">Farming Mode — My Customers</div>
+      <div class="mode-sub">You are in relationship maintenance mode. Focus: renewals, visit cadence, at-risk accounts, new adviser alerts. Your prospect pipeline is on the Hunting tab.</div>
+    </div>
+  </div>
+
+  <div class="fbar">
+    <span class="fl">Simulating Rep</span>
+    <select class="fs" onchange="document.getElementById('farm-rep').textContent=this.value"><option>Amanda English</option><option>Vanida Zdanowicz</option><option>Kelly Langham</option></select>
+    <div class="fright"><div class="live-dot"></div>Farming — <strong id="farm-rep">Amanda English</strong> · Southeast</div>
+  </div>
+
+  <!-- ── WEEKLY VISITS — top of farming mode, prominent ── -->
+  <div class="sl farm-sl">Weekly Visit Tracker — This Week (Goal: 20 Visits)</div>
+  <div class="g g3 mb">
+
+    <div class="card ca-green farm-card">
+      <div class="ch"><div><div class="ct">Weekly Visits — This Week</div><div class="cs">Goal: 20 school visits per week</div></div><span class="clink">View Report →</span></div>
+      <div style="display:flex;align-items:flex-end;gap:4px;height:72px;margin:8px 0 4px">
+        <!-- Mon–Fri bars representing daily visits -->
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px">
+          <div style="flex:1;width:100%;display:flex;align-items:flex-end">
+            <div style="width:100%;height:80%;background:linear-gradient(180deg,#2E844A,rgba(46,132,74,.4));border-radius:3px 3px 0 0"></div>
+          </div>
+          <div style="font-size:9px;font-family:var(--mono);color:var(--muted)">4</div>
+          <div style="font-size:9px;color:var(--dim)">Mon</div>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px">
+          <div style="flex:1;width:100%;display:flex;align-items:flex-end">
+            <div style="width:100%;height:100%;background:linear-gradient(180deg,#2E844A,rgba(46,132,74,.4));border-radius:3px 3px 0 0"></div>
+          </div>
+          <div style="font-size:9px;font-family:var(--mono);color:var(--muted)">5</div>
+          <div style="font-size:9px;color:var(--dim)">Tue</div>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px">
+          <div style="flex:1;width:100%;display:flex;align-items:flex-end">
+            <div style="width:100%;height:60%;background:linear-gradient(180deg,#0070D2,rgba(0,112,210,.4));border-radius:3px 3px 0 0"></div>
+          </div>
+          <div style="font-size:9px;font-family:var(--mono);color:var(--muted)">3</div>
+          <div style="font-size:9px;color:var(--dim)">Wed</div>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px">
+          <div style="flex:1;width:100%;display:flex;align-items:flex-end">
+            <div style="width:100%;height:100%;background:linear-gradient(180deg,#2E844A,rgba(46,132,74,.4));border-radius:3px 3px 0 0"></div>
+          </div>
+          <div style="font-size:9px;font-family:var(--mono);color:var(--muted)">5</div>
+          <div style="font-size:9px;color:var(--dim)">Thu</div>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px">
+          <div style="flex:1;width:100%;display:flex;align-items:flex-end">
+            <div style="width:100%;height:0%;background:var(--sf-border);border-radius:3px 3px 0 0"></div>
+          </div>
+          <div style="font-size:9px;font-family:var(--mono);color:var(--dim)">—</div>
+          <div style="font-size:9px;color:var(--dim)">Fri</div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div><div style="font-size:26px;font-weight:700;font-family:var(--mono);color:var(--green)">17 <span style="font-size:13px;color:var(--muted)">/ 20</span></div><div style="font-size:10px;color:var(--muted)">3 more visits needed this week</div></div>
+        <div style="text-align:right"><div style="font-size:11px;color:var(--muted)">MTD Visits</div><div style="font-size:18px;font-family:var(--mono);font-weight:700;color:var(--cyan)">62</div></div>
+      </div>
+      <div class="pt" style="margin-top:6px;height:6px"><div class="pf pg" style="width:85%"></div></div>
+      <div class="pl"><span style="color:var(--green)">85% of weekly goal</span><span style="color:var(--muted)">Goal: 20/wk</span></div>
+    </div>
+
+    <div class="card ca-cyan farm-card">
+      <div class="ch"><div><div class="ct">Monthly Goals — Farming KPIs</div><div class="cs">Customer-side targets only</div></div></div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px">
+        <div><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:11px;color:var(--muted)">Revenue (Renewals)</span><span style="font-size:12px;font-family:var(--mono)">$5.1M / $6.2M</span></div><div class="pt"><div class="pf pg" style="width:82.3%"></div></div></div>
+        <div><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:11px;color:var(--muted)">Renewals Closed</span><span style="font-size:12px;font-family:var(--mono)">41 / 54</span></div><div class="pt"><div class="pf pg" style="width:75.9%"></div></div></div>
+        <div><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:11px;color:var(--muted)">This Week's Visits</span><span style="font-size:12px;font-family:var(--mono)">17 / 20</span></div><div class="pt"><div class="pf pc" style="width:85%"></div></div></div>
+        <div><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:11px;color:var(--muted)">Referrals This Week</span><span style="font-size:12px;font-family:var(--mono)">3 / 5</span></div><div class="pt"><div class="pf pb" style="width:60%"></div></div></div>
+      </div>
+    </div>
+
+    <!-- NEW ADVISER ALERT — unique to farming mode -->
+    <div class="new-adv-card">
+      <div class="new-adv-header">🚨 New Adviser Alert — My Territory</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Schools with adviser change in last 12 months. Highest renewal risk AND highest relationship opportunity. Visit these first.</div>
+      <div class="scroll-t" style="max-height:130px">
+        <table class="dt">
+          <thead><tr><th>School</th><th>Change Date</th><th>LY Vol.</th><th>Renewal?</th></tr></thead>
+          <tbody>
+            <tr><td class="tdl" style="font-size:10px">Jefferson High School</td><td class="tdm" style="font-size:10px;color:var(--orange)">Aug 2025</td><td class="tdm">$28.4k</td><td><span class="chip-new-adv">NEW ADV</span></td></tr>
+            <tr><td class="tdl" style="font-size:10px">Sunlake High School</td><td class="tdm" style="font-size:10px;color:var(--orange)">Sep 2025</td><td class="tdm">$19.2k</td><td><span class="chip-new-adv">NEW ADV</span></td></tr>
+            <tr><td class="tdl" style="font-size:10px">Plant City HS</td><td class="tdm" style="font-size:10px;color:var(--yellow)">Dec 2025</td><td class="tdm">$15.8k</td><td><span class="chip-new-adv">NEW ADV</span></td></tr>
+            <tr><td class="tdl" style="font-size:10px">Durant High School</td><td class="tdm" style="font-size:10px;color:var(--yellow)">Jan 2026</td><td class="tdm">$12.1k</td><td><span class="chip-new-adv">NEW ADV</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- AT-RISK RENEWALS + VISIT CADENCE — all CUSTOMERS -->
+  <div class="sl farm-sl">My At-Risk Renewals — CUSTOMERS ONLY (Revenue Loss Framing)</div>
+  <div class="g g2 mb">
+    <div class="card ca-red farm-card">
+      <div class="ch"><div><div class="ct">Unrenewed at Risk — CUSTOMERS</div><div class="cs">Dollar value shown — not just record count</div></div><span class="clink">Full List →</span></div>
+      <div class="scroll-t" style="max-height:200px">
+        <table class="dt">
+          <thead><tr><th>School</th><th>Est. Decision</th><th style="color:var(--red)">Revenue at Risk</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td class="tdl" style="font-size:11px">Matt Elementary School</td><td class="tdm" style="font-size:10px">10/17/25</td><td class="loss-amt">$32.7k</td><td><span class="risk r-hi">At Risk</span></td></tr>
+            <tr><td class="tdl" style="font-size:11px">Mabank High School</td><td class="tdm" style="font-size:10px">10/17/25</td><td class="loss-amt">$25.1k</td><td><span class="chip chip-r">Non-Renew</span></td></tr>
+            <tr><td class="tdl" style="font-size:11px">A.B. Miller HS</td><td class="tdm" style="font-size:10px">12/18/25</td><td class="loss-amt">$23.8k</td><td><span class="risk r-hi">At Risk</span></td></tr>
+            <tr><td class="tdl" style="font-size:11px">Abilene Christian School</td><td class="tdm" style="font-size:10px">12/15/25</td><td class="loss-amt">$13.2k</td><td><span class="risk r-hi">At Risk</span></td></tr>
+            <tr><td class="tdl" style="font-size:11px">Abingdon Elementary</td><td class="tdm" style="font-size:10px">12/18/25</td><td class="loss-amt">$6.96k</td><td><span class="risk r-md">Monitor</span></td></tr>
+            <tr><td class="tdl" style="font-size:11px">Irma Lerma Rangel HS</td><td class="tdm" style="font-size:10px">10/18/25</td><td class="loss-amt">$9.55k</td><td><span class="risk r-md">Monitor</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="margin-top:8px;padding:7px;background:var(--sf-red-l);border:1px solid rgba(186,5,23,.2);border-radius:6px;font-size:11px;color:var(--sf-red)">Total at-risk renewal revenue: <strong style="font-size:13px">$111.3k</strong></div>
+    </div>
+
+    <div class="card ca-yellow farm-card">
+      <div class="ch"><div><div class="ct">Days Since Last Visit — CUSTOMERS</div><div class="cs">Signed schools · visit cadence health</div></div><span class="clink">Full List →</span></div>
+      <div class="scroll-t" style="max-height:200px">
+        <table class="dt">
+          <thead><tr><th>School</th><th>Days</th><th>Risk</th></tr></thead>
+          <tbody>
+            <tr><td class="tdl">Tampa Bay Tech HS</td><td class="tdm tdr">29</td><td><span class="risk r-ok">On Track</span></td></tr>
+            <tr><td class="tdl">Plant High School</td><td class="tdm tdr">22</td><td><span class="risk r-ok">On Track</span></td></tr>
+            <tr><td class="tdl">IMG Academy</td><td class="tdm tdr">8</td><td><span class="risk r-ok">On Track</span></td></tr>
+            <tr><td class="tdl">Riverview High School</td><td class="tdm tdr">23</td><td><span class="risk r-ok">On Track</span></td></tr>
+            <tr><td class="tdl">Winthrop College Prep</td><td class="tdm tdr">37</td><td><span class="risk r-md">Medium</span></td></tr>
+            <tr><td class="tdl">Strawberry Crest HS</td><td class="tdm tdr">36</td><td><span class="risk r-md">Medium</span></td></tr>
+            <tr><td class="tdl">Medical Academy DW Winn</td><td class="tdm tdr">42</td><td><span class="risk r-md">Medium</span></td></tr>
+            <tr><td class="tdl">Dunedin High School</td><td class="tdm tdr">44</td><td><span class="risk r-md">Medium</span></td></tr>
+            <tr><td class="tdl">Sunlake High School</td><td class="tdm tdr">64</td><td><span class="risk r-hi">High</span></td></tr>
+            <tr><td class="tdl">Cypress Creek HS–Pasco</td><td class="tdm tdr">213</td><td><span class="risk r-hi">High</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- RENEWAL SNAPSHOT + RELATIONSHIP SCORES -->
+  <div class="sl farm-sl">Renewal Snapshot &amp; Relationship Scores — CUSTOMERS</div>
+  <div class="g g21">
+    <div class="card ca-green farm-card">
+      <div class="ch"><div><div class="ct">My Renewals Snapshot</div><div class="cs">Active school contracts · my territory</div></div><span class="clink">View →</span></div>
+      <div class="im-row" style="margin-bottom:10px">
+        <div class="im"><div class="im-v" style="color:var(--muted)">88</div><div class="im-l">Up for Renewal</div></div>
+        <div class="im"><div class="im-v" style="color:var(--green)">41</div><div class="im-l">Closed Won</div></div>
+        <div class="im"><div class="im-v" style="color:var(--yellow)">35</div><div class="im-l">Open</div></div>
+        <div class="im"><div class="im-v" style="color:var(--red)">12</div><div class="im-l">At Risk</div></div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Renewal Completion Rate</div>
+      <div class="pt"><div class="pf pg" style="width:46.6%"></div></div>
+      <div class="pl"><span style="color:var(--green)">46.6% closed</span><span style="color:var(--red)">13.6% at risk</span></div>
+    </div>
+    <div class="card ca-purple farm-card">
+      <div class="ch"><div><div class="ct">Relationship Scores — CUSTOMERS</div><div class="cs">Principal + Adviser relationship health</div></div><span class="clink">View →</span></div>
+      <div class="scroll-t" style="max-height:160px">
+        <table class="dt">
+          <thead><tr><th>School</th><th>Principal</th><th>Adviser</th><th>Trend</th></tr></thead>
+          <tbody>
+            <tr><td class="tdl" style="font-size:10px">IMG Academy</td><td class="tdm tdc" style="color:var(--green)">3.9</td><td class="tdm tdc" style="color:var(--green)">4.0</td><td style="font-size:11px;color:var(--green)">↑</td></tr>
+            <tr><td class="tdl" style="font-size:10px">Zephyrhills HS</td><td class="tdm tdc" style="color:var(--green)">3.8</td><td class="tdm tdc" style="color:var(--green)">3.6</td><td style="font-size:11px;color:var(--green)">→</td></tr>
+            <tr><td class="tdl" style="font-size:10px">Wesley Chapel HS</td><td class="tdm tdc" style="color:var(--green)">3.4</td><td class="tdm tdc" style="color:var(--green)">3.5</td><td style="font-size:11px;color:var(--green)">↑</td></tr>
+            <tr><td class="tdl" style="font-size:10px">Wharton High School</td><td class="tdm tdc" style="color:var(--yellow)">2.9</td><td class="tdm tdc" style="color:var(--yellow)">3.0</td><td style="font-size:11px;color:var(--yellow)">→</td></tr>
+            <tr><td class="tdl" style="font-size:10px">Sunlake High School</td><td class="tdm tdc" style="color:var(--yellow)">2.7</td><td class="tdm tdc" style="color:var(--orange)">2.4</td><td style="font-size:11px;color:var(--red)">↓</td></tr>
+            <tr><td class="tdl" style="font-size:10px">Dunedin High School</td><td class="tdm tdc" style="color:var(--red)">2.1</td><td class="tdm tdc" style="color:var(--red)">1.8</td><td style="font-size:11px;color:var(--red)">↓</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     REP: MY PROSPECTS (HUNTING MODE)
+══════════════════════════════════════════ -->
+<div id="pane-hunt" class="pane">
+  <div class="mode-badge mode-hunt">
+    <div class="mode-icon">🎯</div>
+    <div>
+      <div class="mode-title" style="color:var(--teal)">Hunting Mode — My Prospects</div>
+      <div class="mode-sub">You are in new business mode. Focus: pipeline coverage (3× rule), school profiles, digital marketing engagement, outreach cadence. Your renewal tracking is on the Customers tab.</div>
+    </div>
+  </div>
+
+  <div class="fbar">
+    <span class="fl">Simulating Rep</span>
+    <select class="fs" onchange="document.getElementById('hunt-rep').textContent=this.value"><option>Amanda English</option><option>Vanida Zdanowicz</option><option>Kelly Langham</option></select>
+    <div class="fright"><div class="live-dot"></div>Hunting — <strong id="hunt-rep">Amanda English</strong> · Southeast</div>
+  </div>
+
+  <!-- 3× PERSONAL PIPELINE CHECK — rep-level version of exec rule -->
+  <div class="sl hunt-sl">My 3× Pipeline Check — Personal Leading Indicator</div>
+  <div class="g g4 mb">
+    <div class="card ca-red hunt-card">
+      <div class="ch"><div><div class="ct">My 3× Pipeline Check</div><div class="cs">Need 3× monthly quota in 75%+ stage</div></div></div>
+      <div class="kv sm" style="color:var(--red)">1.4× <span style="font-size:12px;color:var(--muted)">/ 3× needed</span></div>
+      <div class="kgoal">Monthly quota: <span>$150k</span> · Need: <span>$450k in 75%+</span></div>
+      <div class="kgoal">75%+ Pipeline: <span style="color:var(--red)">$214k</span></div>
+      <div class="pt" style="height:7px"><div class="pf pr" style="width:47.6%"></div></div>
+      <div class="pl"><span style="color:var(--red)">47.6% of needed coverage</span></div>
+      <div style="margin-top:8px;font-size:10px;color:var(--orange)">Need $236k more in 75%+ stage to hit 3×. Move 2–3 prospects from 50% this week.</div>
+    </div>
+    <div class="card ca-teal hunt-card"><div class="ch"><div class="ct">New Business Won</div><div class="cs">PROSPECTS only</div></div><div class="kv sm">13</div><div class="kgoal">Target: <span>20</span></div><div class="pt"><div class="pf pt2" style="width:65%"></div></div><div class="pl"><span style="color:var(--teal)">65%</span><span style="color:var(--muted)">20</span></div></div>
+    <div class="card ca-blue hunt-card"><div class="ch"><div class="ct">New Business Revenue</div><div class="cs">PROSPECTS only</div></div><div class="kv sm">$955k</div><div class="kgoal">Target: <span>$1.3M</span></div><div class="pt"><div class="pf pb" style="width:73.5%"></div></div><div class="pl"><span style="color:var(--blue)">73.5%</span></div></div>
+    <div class="card ca-cyan hunt-card"><div class="ch"><div class="ct">Weekly Visits — Prospects</div><div class="cs">New school outreach visits</div></div><div class="kv sm" style="color:var(--cyan)">9 <span style="font-size:13px;color:var(--muted)">/ 12</span></div><div class="kgoal">Prospect visit goal: <span>12/week</span></div><div class="pt"><div class="pf pc" style="width:75%"></div></div><div class="pl"><span style="color:var(--cyan)">75%</span></div></div>
+  </div>
+
+  <!-- PIPELINE FUNNEL + SCHOOL PROFILES -->
+  <div class="sl hunt-sl">My Prospect Pipeline — PROSPECTS ONLY</div>
+  <div class="g g3 mb">
+    <div class="card ca-teal hunt-card">
+      <div class="ch"><div><div class="ct">My Pipeline by Stage</div><div class="cs">Unsigned schools · probability stages</div></div><span class="clink">View →</span></div>
+      <div class="fn">
+        <div class="fn-row"><div class="fn-meta"><div class="fn-stage">95 Chance</div><div class="fn-amt">$736k · 14 schools</div></div><div class="fn-track"><div class="fn-bar" style="width:100%;background:linear-gradient(90deg,var(--green),#60ffb0)">14</div></div></div>
+        <div class="fn-row"><div class="fn-meta"><div class="fn-stage">75 Chance</div><div class="fn-amt">$604k · 11 schools</div></div><div class="fn-track"><div class="fn-bar" style="width:79%;background:linear-gradient(90deg,var(--cyan),#80eeff)">11</div></div></div>
+        <div class="fn-row"><div class="fn-meta"><div class="fn-stage">50 Chance</div><div class="fn-amt">$412k · 8 schools</div></div><div class="fn-track"><div class="fn-bar" style="width:56%;background:linear-gradient(90deg,var(--blue),#80bbff)">8</div></div></div>
+        <div class="fn-row"><div class="fn-meta"><div class="fn-stage">25 Chance</div><div class="fn-amt">$215k · 5 schools</div></div><div class="fn-track"><div class="fn-bar" style="width:29%;background:linear-gradient(90deg,var(--yellow),#ffe080)">5</div></div></div>
+        <div class="fn-row"><div class="fn-meta"><div class="fn-stage">5 Chance</div><div class="fn-amt">$90k · 3 schools</div></div><div class="fn-track"><div class="fn-bar" style="width:12%;background:linear-gradient(90deg,var(--orange),#ffb080)">3</div></div></div>
+      </div>
+    </div>
+    <div class="card ca-purple hunt-card">
+      <div class="ch"><div><div class="ct">My Prospect School Profiles</div><div class="cs">How to approach each account type</div></div><span class="clink">View →</span></div>
+      <div style="margin-top:4px">
+        <div class="profile-row"><div class="profile-label" style="color:var(--gold);font-size:10px">🏆 Award Winning</div><div class="profile-bar-wrap"><div class="profile-bar" style="width:4%;background:linear-gradient(90deg,var(--gold),#ffe080)">1</div></div><div class="profile-count">1</div></div>
+        <div class="profile-row"><div class="profile-label" style="color:var(--blue);font-size:10px">💬 Engaged</div><div class="profile-bar-wrap"><div class="profile-bar" style="width:14%;background:linear-gradient(90deg,var(--blue),#80bbff)">4</div></div><div class="profile-count">4</div></div>
+        <div class="profile-row"><div class="profile-label" style="color:var(--orange);font-size:10px">🆕 New Adviser</div><div class="profile-bar-wrap"><div class="profile-bar" style="width:35%;background:linear-gradient(90deg,var(--orange),#ffb080)">10</div></div><div class="profile-count">10</div></div>
+        <div class="profile-row"><div class="profile-label" style="color:var(--muted);font-size:10px">📋 Standard</div><div class="profile-bar-wrap"><div class="profile-bar" style="width:100%;background:linear-gradient(90deg,#706E6B,#B0ADAB)">26</div></div><div class="profile-count">26</div></div>
+      </div>
+      <div style="margin-top:8px;font-size:9px;color:var(--dim);line-height:1.7">
+        🏆 Award Winning → Legacy pitch, show award history<br>
+        💬 Engaged → They know us, close on value add<br>
+        🆕 New Adviser → Highest urgency, introduce CADY first<br>
+        📋 Standard → ROI and ease-of-use pitch
+      </div>
+    </div>
+    <div class="card ca-yellow hunt-card">
+      <div class="ch"><div><div class="ct">Adviser Generation — My Prospects</div><div class="cs">Informs your sales approach</div></div><span class="clink">View →</span></div>
+      <div style="position:relative;height:130px"><canvas id="myAdviserGen"></canvas></div>
+      <div style="margin-top:8px;font-size:9px;color:var(--dim);line-height:1.7">
+        Gen Alpha/Z → New to job, needs handholding and simplicity<br>
+        Millennial → Digital proof, peer reviews, ease of use<br>
+        Gen X → ROI-focused, efficient, respect their time<br>
+        Boomer → Relationship-first, legacy, trust over time
+      </div>
+    </div>
+  </div>
+
+  <!-- DIGITAL MARKETING + OUTREACH CADENCE -->
+  <div class="sl hunt-sl">Digital Marketing Engagement &amp; Outreach Cadence — PROSPECTS</div>
+  <div class="g g2">
+    <div class="card ca-purple hunt-card">
+      <div class="ch"><div><div class="ct">Digital Marketing Opens — Last 60 Days</div><div class="cs">Warm prospects — prioritize these visits</div></div><span class="clink">View →</span></div>
+      <div class="scroll-t" style="max-height:210px">
+        <div style="display:flex;flex-direction:column;gap:0">
+          <div class="dmark-row"><div class="dmark-school" style="color:var(--blue)">Liberty High School</div><div class="dmark-bar-wrap"><div class="dmark-bar" style="width:100%"></div></div><div class="dmark-opens" style="color:var(--purple)">9</div><div style="margin-left:6px"><span class="chip chip-g" style="font-size:9px">Visit Now</span></div></div>
+          <div class="dmark-row"><div class="dmark-school" style="color:var(--blue)">Central Catholic HS</div><div class="dmark-bar-wrap"><div class="dmark-bar" style="width:77%"></div></div><div class="dmark-opens" style="color:var(--purple)">7</div><div style="margin-left:6px"><span class="chip chip-g" style="font-size:9px">Visit Now</span></div></div>
+          <div class="dmark-row"><div class="dmark-school" style="color:var(--blue)">Central Middle School</div><div class="dmark-bar-wrap"><div class="dmark-bar" style="width:77%"></div></div><div class="dmark-opens" style="color:var(--purple)">7</div><div style="margin-left:6px"><span class="chip chip-g" style="font-size:9px">Visit Now</span></div></div>
+          <div class="dmark-row"><div class="dmark-school" style="color:var(--blue)">Lincoln High School</div><div class="dmark-bar-wrap"><div class="dmark-bar" style="width:77%"></div></div><div class="dmark-opens">7</div><div style="margin-left:6px"><span class="chip chip-y" style="font-size:9px">Warm</span></div></div>
+          <div class="dmark-row"><div class="dmark-school" style="color:var(--blue)">Central High School</div><div class="dmark-bar-wrap"><div class="dmark-bar" style="width:66%"></div></div><div class="dmark-opens">6</div><div style="margin-left:6px"><span class="chip chip-y" style="font-size:9px">Warm</span></div></div>
+          <div class="dmark-row"><div class="dmark-school" style="color:var(--blue)">Lincoln Junior HS</div><div class="dmark-bar-wrap"><div class="dmark-bar" style="width:66%"></div></div><div class="dmark-opens">6</div><div style="margin-left:6px"><span class="chip chip-y" style="font-size:9px">Warm</span></div></div>
+          <div class="dmark-row"><div class="dmark-school" style="color:var(--blue)">North High School</div><div class="dmark-bar-wrap"><div class="dmark-bar" style="width:66%"></div></div><div class="dmark-opens">6</div><div style="margin-left:6px"><span class="chip chip-y" style="font-size:9px">Warm</span></div></div>
+          <div class="dmark-row"><div class="dmark-school">State Bridge Crossing</div><div class="dmark-bar-wrap"><div class="dmark-bar" style="width:55%"></div></div><div class="dmark-opens">5</div><div style="margin-left:6px"><span class="chip chip-m" style="font-size:9px">Lukewarm</span></div></div>
+          <div class="dmark-row"><div class="dmark-school">Cleveland High School</div><div class="dmark-bar-wrap"><div class="dmark-bar" style="width:55%"></div></div><div class="dmark-opens">5</div><div style="margin-left:6px"><span class="chip chip-m" style="font-size:9px">Lukewarm</span></div></div>
+          <div class="dmark-row"><div class="dmark-school">Grace Christian Academy</div><div class="dmark-bar-wrap"><div class="dmark-bar" style="width:55%"></div></div><div class="dmark-opens">5</div><div style="margin-left:6px"><span class="chip chip-m" style="font-size:9px">Lukewarm</span></div></div>
+        </div>
+      </div>
+      <div style="margin-top:8px;font-size:10px;color:var(--dim)">Schools that opened emails are 3× more likely to take a meeting. Visit these before cold accounts.</div>
+    </div>
+
+    <div class="card ca-yellow hunt-card">
+      <div class="ch"><div><div class="ct">Days Since Last Visit — PROSPECTS</div><div class="cs">Unsigned schools · outreach cadence</div></div><span class="clink">Full List →</span></div>
+      <div class="scroll-t" style="max-height:210px">
+        <table class="dt">
+          <thead><tr><th>School</th><th>Stage</th><th>Mktg Opens</th><th>Days</th><th>Risk</th></tr></thead>
+          <tbody>
+            <tr><td class="tdl" style="font-size:10px">Liberty High School</td><td><span class="chip chip-g" style="font-size:9px">75 Chance</span></td><td class="tdm tdc" style="color:var(--purple)">9 📧</td><td class="tdm tdr">18</td><td><span class="risk r-ok">OK</span></td></tr>
+            <tr><td class="tdl" style="font-size:10px">Central Catholic HS</td><td><span class="chip chip-g" style="font-size:9px">95 Chance</span></td><td class="tdm tdc" style="color:var(--purple)">7 📧</td><td class="tdm tdr">22</td><td><span class="risk r-ok">OK</span></td></tr>
+            <tr><td class="tdl" style="font-size:10px">Zephyrhills HS</td><td><span class="chip chip-g" style="font-size:9px">95 Chance</span></td><td class="tdm tdc" style="color:var(--muted)">0</td><td class="tdm tdr">62</td><td><span class="risk r-md">Med</span></td></tr>
+            <tr><td class="tdl" style="font-size:10px">Woodgrove HS</td><td><span class="chip chip-g" style="font-size:9px">75 Chance</span></td><td class="tdm tdc" style="color:var(--purple)">3 📧</td><td class="tdm tdr">62</td><td><span class="risk r-md">Med</span></td></tr>
+            <tr><td class="tdl" style="font-size:10px">Woodbridge HS</td><td><span class="chip chip-y" style="font-size:9px">50 Chance</span></td><td class="tdm tdc" style="color:var(--muted)">0</td><td class="tdm tdr">101</td><td><span class="risk r-hi">High</span></td></tr>
+            <tr><td class="tdl" style="font-size:10px">Winter Haven Senior HS</td><td><span class="chip chip-y" style="font-size:9px">50 Chance</span></td><td class="tdm tdc" style="color:var(--muted)">1</td><td class="tdm tdr">125</td><td><span class="risk r-hi">High</span></td></tr>
+            <tr><td class="tdl" style="font-size:10px">York Co School Tech</td><td><span class="chip chip-m" style="font-size:9px">25 Chance</span></td><td class="tdm tdc" style="color:var(--muted)">0</td><td class="tdm tdr">311</td><td><span class="risk r-hi">High</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="margin-top:8px;font-size:10px;color:var(--dim)">💡 Marketing opens shown inline — high opens + long no-visit = your highest priority call today.</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     INSIDE SALES / BDR
+══════════════════════════════════════════ -->
+<div id="pane-bdr" class="pane">
+  <div class="audience">👁 <strong>Audience:</strong> BDRs + IS Manager — <strong>PROSPECTS ONLY</strong> · Pipeline creation, digital engagement, outreach, IS-sourced conversion</div>
+  <div class="info">📌 <strong>Prospect Focus Only:</strong> Renewal health is on Rep and Regional dashboards. This dashboard tracks unsigned schools and measures whether IS-created pipeline is converting downstream.</div>
+
+  <div class="sl">Inside Sales — Monthly Goals (March 2026)</div>
+  <div class="g g4 mb">
+    <div class="card ca-blue"><div class="ch"><div class="ct">New Opps Created</div><div class="cs">Prospect pipeline generated</div></div><div class="kv sm">284</div><div class="kgoal">Goal: <span>350</span> / month</div><div class="pt"><div class="pf pb" style="width:81.1%"></div></div><div class="pl"><span style="color:var(--blue)">81.1%</span><span style="color:var(--muted)">350</span></div></div>
+    <div class="card ca-cyan"><div class="ch"><div class="ct">Activities Logged</div><div class="cs">On prospect accounts only</div></div><div class="kv sm">1,047</div><div class="kgoal">Goal: <span>1,200</span> / month</div><div class="pt"><div class="pf pc" style="width:87.3%"></div></div><div class="pl"><span style="color:var(--cyan)">87.3%</span></div></div>
+    <div class="card ca-teal"><div class="ch"><div class="ct">Prospect Accounts Contacted</div><div class="cs">Unique prospects touched</div></div><div class="kv sm">342</div><div class="kgoal">Goal: <span>400</span> / month</div><div class="pt"><div class="pf pt2" style="width:85.5%"></div></div><div class="pl"><span style="color:var(--teal)">85.5%</span></div></div>
+    <div class="card ca-gold"><div class="ch"><div class="ct">IS-Sourced Converted Revenue</div><div class="cs">Downstream wins from IS pipeline</div></div><div class="kv sm">$2.1M</div><div class="kgoal">Goal: <span>$3.0M</span> / month</div><div class="pt"><div class="pf po" style="width:70%"></div></div><div class="pl"><span style="color:var(--gold)">70.0%</span></div></div>
+  </div>
+
+  <div class="g g21 mb">
+    <div class="card ca-blue"><div class="ch"><div><div class="ct">Open Prospect Opps by BDR</div><div class="cs">PROSPECTS only — no renewal mixing</div></div><span class="clink">View →</span></div><div style="position:relative;height:220px"><canvas id="openOppsBdr"></canvas></div></div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="card ca-cyan"><div class="ch"><div><div class="ct">Daily Activities This Month</div><div class="cs">Green line = 40/day target</div></div></div><div style="position:relative;height:110px"><canvas id="bdrActivities"></canvas></div></div>
+      <div class="card ca-teal"><div class="ch"><div><div class="ct">Prospect Accounts Contacted / Day</div><div class="cs">Target: 18 unique prospects/day</div></div></div><div style="position:relative;height:110px"><canvas id="bdrAcctContacted"></canvas></div></div>
+    </div>
+  </div>
+
+  <!-- DIGITAL MARKETING + OUTREACH CONVERSION -->
+  <div class="sl">Digital Marketing Engagement — Prospect Prioritization</div>
+  <div class="g g3 mb">
+    <div class="card ca-purple"><div class="ch"><div><div class="ct">Digital Marketing Opens — Prospects</div><div class="cs">Last 60 days · prioritize warm leads</div></div><span class="clink">View →</span></div>
+      <div style="position:relative;height:160px"><canvas id="bdrDmarkBar"></canvas></div>
+    </div>
+    <div class="card ca-blue"><div class="ch"><div><div class="ct">Contact-to-Stage-Movement Ratio</div><div class="cs">Is outreach converting? Activity → pipeline advancement</div></div><span class="clink">View →</span></div>
+      <div class="im-row" style="margin-bottom:10px">
+        <div class="im"><div class="im-v" style="color:var(--cyan)">342</div><div class="im-l">Accts Contacted</div></div>
+        <div class="im"><div class="im-v" style="color:var(--blue)">61</div><div class="im-l">Stage Advanced</div></div>
+        <div class="im"><div class="im-v" style="color:var(--gold)">17.8%</div><div class="im-l">Conversion Rate</div></div>
+      </div>
+      <div style="position:relative;height:100px"><canvas id="bdrConversion"></canvas></div>
+      <div style="font-size:10px;color:var(--dim);margin-top:6px">Target: 20% contact-to-stage-movement. Currently 2.2 pts below. Outreach volume is adequate — focus on message quality.</div>
+    </div>
+    <div class="card ca-teal"><div class="ch"><div><div class="ct">IS-Sourced Lead Downstream Progression</div><div class="cs">Where do BDR-created opps go?</div></div><span class="clink">View →</span></div>
+      <div class="fn" style="margin-top:6px">
+        <div class="fn-row"><div class="fn-meta"><div class="fn-stage">IS Created</div><div class="fn-amt">284 opps</div></div><div class="fn-track"><div class="fn-bar" style="width:100%;background:linear-gradient(90deg,var(--purple),#c8b0ff)">284</div></div></div>
+        <div class="fn-row"><div class="fn-meta"><div class="fn-stage">Moved to 50%+</div><div class="fn-amt">91 opps</div></div><div class="fn-track"><div class="fn-bar" style="width:32%;background:linear-gradient(90deg,var(--blue),#80bbff)">91</div></div></div>
+        <div class="fn-row"><div class="fn-meta"><div class="fn-stage">75%+ Stage</div><div class="fn-amt">44 opps</div></div><div class="fn-track"><div class="fn-bar" style="width:15.5%;background:linear-gradient(90deg,var(--cyan),#80eeff)">44</div></div></div>
+        <div class="fn-row"><div class="fn-meta"><div class="fn-stage">Contract Delivered</div><div class="fn-amt">18 opps</div></div><div class="fn-track"><div class="fn-bar" style="width:6.3%;background:linear-gradient(90deg,var(--green),#60ffb0)">18</div></div></div>
+        <div class="fn-row"><div class="fn-meta"><div class="fn-stage">Closed Won</div><div class="fn-amt">$2.1M · 12 schools</div></div><div class="fn-track"><div class="fn-bar" style="width:4.2%;background:linear-gradient(90deg,var(--gold),#ffe080)">12</div></div></div>
+      </div>
+      <div style="margin-top:8px;font-size:10px;color:var(--dim)">BDR conversion: 4.2% reach Closed Won. Industry benchmark: ~6–8%. Gap to close.</div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+// ── TAB SWITCHER ──
+function go(id, btn) {
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tab-p').forEach(b=>b.classList.remove('on'));
+  document.getElementById('pane-'+id).classList.add('on');
+  btn.classList.add('on');
+  if (!window._ci) window._ci={};
+  if (!window._ci[id]) { window._ci[id]=true; initCharts(id); }
+}
+
+// ── CHART DEFAULTS — SF Lightning ──
+Chart.defaults.color='#706E6B';
+Chart.defaults.borderColor='#DDDBDA';
+Chart.defaults.font.family="'Inter',sans-serif";
+Chart.defaults.font.size=11;
+const BL='#0070D2',CY='#1B96FF',GR='#2E844A',YE='#DD7A01',OR='#E07000',
+      RE='#BA0517',GO='#A07000',PU='#9050E9',TE='#06A59A';
+const MO=['Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar'];
+const D16=['3/2','3/3','3/4','3/5','3/6','3/9','3/10','3/11','3/12','3/13','3/14','3/15','3/16','3/17','3/18','3/19'];
+
+function mkLine(id, labels, ds, opts){
+  const c=document.getElementById(id); if(!c)return;
+  new Chart(c,{type:'line',data:{labels,datasets:ds},options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:!!(opts&&opts.legend)}},
+    scales:{x:{grid:{display:false},ticks:{maxRotation:0,font:{size:9}}},
+            y:{grid:{color:'rgba(221,219,218,.8)'},beginAtZero:true,...(opts&&opts.y||{})}},...(opts&&opts.extra||{})
+  }});
+}
+function mkBar(id, labels, ds, opts){
+  const c=document.getElementById(id); if(!c)return;
+  new Chart(c,{type:'bar',data:{labels,datasets:ds},options:{
+    indexAxis:opts&&opts.horiz?'y':'x',responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:!!(opts&&opts.legend)},...(opts&&opts.tooltip?{tooltip:opts.tooltip}:{})},
+    scales:{x:{grid:opts&&opts.horiz?{color:'rgba(221,219,218,.8)'}:{display:false},ticks:opts&&opts.xt||{}},
+            y:{grid:opts&&opts.horiz?{display:false}:{color:'rgba(221,219,218,.8)'},beginAtZero:true,ticks:opts&&opts.yt||{}}}
+  }});
+}
+
+// ── EXEC CHARTS (immediate) ──
+(function(){
+  mkLine('signedMonthly',MO,[{data:[1,57,89,121,164,201,300,146,50,32,22,0],borderColor:CY,backgroundColor:'rgba(27,150,255,.12)',tension:.4,fill:true,pointBackgroundColor:CY,pointRadius:3}]);
+  mkBar('renewalKpi',MO,[
+    {label:'Goal',data:[8,9,10,11,12,14,16,14,10,8,7,6],backgroundColor:'rgba(0,112,210,.15)',borderColor:BL,borderWidth:1,borderRadius:3},
+    {label:'LY Actual',data:[7.8,8.5,9.2,10.8,11.5,13.2,15.8,13.4,9.8,7.6,7.1,5.8],backgroundColor:'rgba(144,80,233,.18)',borderColor:PU,borderWidth:1,borderRadius:3},
+    {label:'CY YTD',data:[7.2,8.1,8.9,10.1,11.8,13.8,16.2,14.1,9.2,6.9,null,null],backgroundColor:'rgba(46,132,74,.18)',borderColor:GR,borderWidth:1.5,borderRadius:3}
+  ],{legend:true,yt:{callback:v=>'$'+v+'M',font:{size:9}}});
+  mkLine('renewalRate',MO,[
+    {label:'Goal 95%',data:Array(12).fill(95),borderColor:'rgba(0,112,210,.5)',borderDash:[4,3],borderWidth:1.5,pointRadius:0,fill:false},
+    {label:'LY Rate',data:[93,94,94.5,93.8,94,94.2,95,94.8,93.5,94.1,94.4,93.8],borderColor:'rgba(144,80,233,.6)',tension:.3,pointRadius:2,fill:false},
+    {label:'CY Rate',data:[94.2,94.8,95.1,94.6,94.9,95.2,95.8,95.1,94.4,94.7,null,null],borderColor:GR,tension:.3,pointRadius:2,fill:false}
+  ],{legend:true,extra:{scales:{x:{grid:{display:false},ticks:{maxRotation:0,font:{size:9}}},y:{min:90,max:100,grid:{color:'rgba(221,219,218,.8)'},ticks:{callback:v=>v+'%',font:{size:9}}}}}});
+  const rd=document.getElementById('regionDonut');
+  if(rd) new Chart(rd,{type:'doughnut',data:{labels:['Southeast','Southwest','Northeast','West Coast','Mid-Atlantic'],datasets:[{data:[73.2,21.8,11.8,7.3,5.7],backgroundColor:[BL,GR,YE,PU,OR],borderColor:'#FFFFFF',borderWidth:2,hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.label+': $'+c.raw+'M'}}}}});
+})();
+window._ci={exec:true};
+
+function initCharts(id){
+  if(id==='pace'){
+    mkLine('paceCurve',['Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb'],[
+      {label:'Historical',data:[5.2,8.1,14.3,22.8,34.1,45.8,62.4,75.3,81.8,87.6,91.2],borderColor:'rgba(176,173,171,.8)',borderDash:[5,3],tension:.4,pointRadius:2,fill:false},
+      {label:'SY27 Actual',data:[4.8,7.2,12.9,20.1,31.8,43.2,60.9,72.4,78.1,82.3,74.9],borderColor:CY,backgroundColor:'rgba(27,150,255,.1)',tension:.4,fill:true,pointRadius:3,pointBackgroundColor:CY}
+    ],{legend:true,extra:{scales:{x:{grid:{display:false},ticks:{maxRotation:0,font:{size:9}}},y:{grid:{color:'rgba(221,219,218,.8)'},ticks:{callback:v=>v+'%',font:{size:9}}}}}});
+    mkBar('renewalPace',MO.slice(0,11),[
+      {label:'Plan',data:[8,9,10,11,12,14,16,14,10,8,7],backgroundColor:'rgba(0,112,210,.12)',borderColor:BL,borderWidth:1,borderRadius:3},
+      {label:'Actual',data:[7.2,8.1,8.9,10.1,11.8,13.8,16.2,14.1,9.2,6.9,null],backgroundColor:'rgba(6,165,154,.2)',borderColor:TE,borderWidth:1.5,borderRadius:3}
+    ],{legend:true,yt:{callback:v=>'$'+v+'M',font:{size:9}}});
+    mkBar('newBizPace',MO.slice(0,11),[
+      {label:'Plan',data:[4,5,6,7,8,10,12,10,7,5,4],backgroundColor:'rgba(224,112,0,.15)',borderColor:OR,borderWidth:1,borderRadius:3},
+      {label:'Actual',data:[0.2,0.4,0.6,0.8,1.1,1.4,1.9,1.3,0.7,0.3,null],backgroundColor:'rgba(160,112,0,.18)',borderColor:GO,borderWidth:1.5,borderRadius:3}
+    ],{legend:true,yt:{callback:v=>'$'+v+'M',font:{size:9}}});
+  }
+  if(id==='regional'){
+    const agc=document.getElementById('adviserGen'); if(!agc)return;
+    new Chart(agc,{type:'doughnut',data:{labels:['Gen Alpha (2010–24)','Gen Z (1997–10)','Millennial (1981–96)','Gen X (1965–80)','Boomer'],datasets:[{data:[2,58,318,147,42],backgroundColor:['#00d97e','#00c6e0','#2f8ef4','#f5c842','#f4824a'],borderColor:'#FFFFFF',borderWidth:2,hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:false,cutout:'55%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.label+': '+c.raw+' advisers'}}}}});
+  }
+  if(id==='hunt'){
+    const myAG=document.getElementById('myAdviserGen'); if(!myAG)return;
+    new Chart(myAG,{type:'doughnut',data:{labels:['Gen Z','Millennial','Gen X','Boomer'],datasets:[{data:[12,18,8,3],backgroundColor:[CY,BL,YE,OR],borderColor:'#FFFFFF',borderWidth:2,hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:false,cutout:'55%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.label+': '+c.raw+' advisers'}}}}});
+  }
+  if(id==='bdr'){
+    mkBar('openOppsBdr',
+      ['Justin Mellinger','Nancy Jones','Rachel DiFelenci','Rheanne Walker','Mochelle Schleider','Jenny Wright','Mike Canziani','Andrea Wold','Jeff Folk','Caitlin Schellhammer','Mary Jane Johnson','Amanda English','Jess Weber'],
+      [{data:[77,66,64,59,58,57,57,51,40,37,36,30,26],backgroundColor:ctx=>ctx.dataIndex<3?'rgba(0,112,210,.75)':'rgba(0,112,210,.5)',borderRadius:3}],
+      {horiz:true,yt:{font:{size:10}}}
+    );
+    mkLine('bdrActivities',D16,[
+      {data:[24,78,37,48,9,48,42,54,82,4,61,82,40,19,29,24],borderColor:CY,backgroundColor:'rgba(27,150,255,.12)',tension:.3,fill:true,pointRadius:2,pointBackgroundColor:CY},
+      {data:Array(16).fill(40),borderColor:'rgba(46,132,74,.5)',borderDash:[4,3],borderWidth:1.5,pointRadius:0,fill:false}
+    ]);
+    mkLine('bdrAcctContacted',D16,[
+      {data:[15,29,19,20,19,21,18,18,28,6,23,9,14,28,18,15],borderColor:TE,backgroundColor:'rgba(0,181,163,.1)',tension:.3,fill:true,pointRadius:2,pointBackgroundColor:TE},
+      {data:Array(16).fill(18),borderColor:'rgba(46,132,74,.5)',borderDash:[4,3],borderWidth:1.5,pointRadius:0,fill:false}
+    ]);
+    mkBar('bdrDmarkBar',
+      ['Liberty HS','Central Catholic','Central Middle','Lincoln HS','Central HS','Lincoln Jr HS','North HS','State Bridge','Cleveland HS','Grace Christian'],
+      [{data:[9,7,7,7,6,6,6,5,5,5],backgroundColor:ctx=>ctx.parsed.x>=7?'rgba(144,80,233,.8)':ctx.parsed.x>=5?'rgba(144,80,233,.5)':'rgba(144,80,233,.3)',borderRadius:3}],
+      {horiz:true,yt:{font:{size:9}}}
+    );
+    mkBar('bdrConversion',
+      ['Oct','Nov','Dec','Jan','Feb','Mar'],
+      [
+        {label:'Contact Rate',data:[22.1,20.4,19.8,21.2,19.1,17.8],backgroundColor:'rgba(0,198,224,.25)',borderColor:CY,borderWidth:1.5,borderRadius:3},
+        {label:'Target 20%',data:Array(6).fill(20),backgroundColor:'rgba(46,132,74,.08)',borderColor:'rgba(46,132,74,.5)',borderWidth:1,borderRadius:3}
+      ],
+      {legend:true,yt:{callback:v=>v+'%',font:{size:9}}}
+    );
+  }
+}
+</script>
+</body>
+</html>
