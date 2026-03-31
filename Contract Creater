@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CADY District Contract Builder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; position: relative; z-index: 10; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%; background: #4f46e5; border: 4px solid #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.3); cursor: pointer; margin-top: -8px; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8px; cursor: pointer; background: #e2e8f0; border-radius: 4px; }
+        .slider-filled::-webkit-slider-runnable-track { background: linear-gradient(to right, #4f46e5 var(--value, 0%), #e2e8f0 var(--value, 0%)); }
+        
+        /* Marker CSS */
+        .baseline-marker {
+            position: absolute;
+            top: 14px;
+            width: 10px;
+            height: 10px;
+            background-color: #f59e0b; /* Amber 500 */
+            transform: translateX(-50%) rotate(45deg);
+            z-index: 5;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen font-sans text-slate-800 pb-12">
+
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-20 shadow-sm">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-start md:items-center flex-col md:flex-row gap-4">
+            <div>
+                <h1 class="text-2xl font-black tracking-tight text-slate-900">CADY <span class="text-slate-400 font-medium">District Contract Builder</span></h1>
+            </div>
+            <div class="flex flex-col items-end gap-2 w-full md:w-auto">
+                <div class="text-[10px] font-extrabold text-indigo-500 uppercase tracking-widest bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">
+                    Legacy Subsidy Engine
+                </div>
+                <div class="flex items-center space-x-4">
+                    <select class="bg-slate-100 border border-slate-300 text-slate-700 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2 font-bold cursor-pointer">
+                        <option value="initial">📝 Initial Contract</option>
+                        <option value="planning">🔄 Planning Meeting / Change Order</option>
+                    </select>
+                    <button onclick="resetEntireDeal()" class="text-sm font-bold text-slate-500 hover:text-slate-900 transition">Start New Deal</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto px-6 mt-8 flex flex-col lg:flex-row gap-8">
+        
+        <div class="w-full lg:w-2/3 space-y-6">
+            
+            <div class="bg-slate-900 p-6 rounded-2xl shadow-md text-white border border-slate-800">
+                <h2 class="text-lg font-bold mb-4 text-indigo-300 uppercase tracking-wider text-sm">Step 1: Master Agreement Level</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-300 mb-1">District Name (Applies to all schools)</label>
+                        <select id="districtSelect" class="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer">
+                            <option value="1.2">Orange County Public Schools (High Value: 1.2x)</option>
+                            <option value="1.0" selected>Fulton County Schools (Standard: 1.0x)</option>
+                            <option value="0.85">Gwinnett County Public Schools (Discounted: 0.85x)</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center pt-6">
+                        <p class="text-xs text-slate-400">All schools added to this deal will inherit this district's pricing multiplier and vendor requirements.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div class="flex justify-between items-center mb-4 border-b pb-4">
+                    <h2 class="text-xl font-bold flex items-center"><span class="bg-indigo-100 text-indigo-700 rounded-full w-8 h-8 flex items-center justify-center mr-3 text-sm">2</span> Build School Agreement</h2>
+                    <div class="text-sm font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
+                        Current School Budget Limit: <span id="currentSchoolBudget" class="text-indigo-600 font-black">$0</span>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 bg-indigo-50/50 p-4 rounded-xl border border-indigo-100">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">School Name</label>
+                        <select id="schoolName" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-sm font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer">
+                            </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Deal Type</label>
+                        <select id="dealType" class="w-full px-4 py-3 bg-white border border-slate-300 rounded-lg text-sm font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer">
+                            <option value="new">🌟 New Business</option>
+                            <option value="renewal">🤝 Renewal / Legacy Account</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="historicalRevBox" class="hidden mb-6 p-5 bg-amber-50 border border-amber-200 rounded-xl shadow-inner">
+                    <div class="mb-4 border-b border-amber-200 pb-4">
+                        <label class="block text-sm font-bold text-amber-900 mb-1">Historical Annual Revenue</label>
+                        <p class="text-xs text-amber-700 mb-3">Entering this boosts the overall budget limit to accommodate a legacy account's size.</p>
+                        <div class="relative w-full md:w-1/2">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 font-bold text-amber-900">$</span>
+                            <input type="number" id="historicalRev" value="0" placeholder="e.g. 450000" class="w-full pl-8 pr-4 py-3 bg-white border border-amber-300 rounded-lg text-lg font-black text-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-500">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-bold text-amber-900 mb-1">Explicit Grandfathered Expectations</label>
+                        <p class="text-xs text-amber-700 mb-3">Only fill these out if the school <span class="underline font-bold">requires</span> them to renew. This subsidizes your internal cost target so your bonus isn't penalized by historical obligations. Trade below the 🔸 marker to grow your bonus.</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-amber-800 uppercase mb-1">Expected Cash Commission</label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 font-bold text-amber-900">$</span>
+                                    <input type="number" id="histComm" value="0" class="w-full pl-8 pr-4 py-2 bg-white border border-amber-300 rounded-lg font-bold text-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-500">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-amber-800 uppercase mb-1">Expected MyCady Credit (Prints)</label>
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 font-bold text-amber-900">$</span>
+                                    <input type="number" id="histDeliv" value="0" class="w-full pl-8 pr-4 py-2 bg-white border border-amber-300 rounded-lg font-bold text-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-500">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100 mb-8">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase">Total Students</label>
+                        <input type="number" id="totalStudents" value="1500" min="1" class="w-full mt-1 bg-transparent border-b border-slate-300 focus:outline-none font-bold text-lg text-indigo-900">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase">Seniors</label>
+                        <input type="number" id="enrollment" value="400" min="1" class="w-full mt-1 bg-transparent border-b border-slate-300 focus:outline-none font-bold text-lg text-indigo-900">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase">F&R Lunch %</label>
+                        <input type="number" id="frLunch" value="20" min="1" max="100" class="w-full mt-1 bg-transparent border-b border-slate-300 focus:outline-none font-bold text-lg text-indigo-900">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase">Distance from Studio</label>
+                        <input type="number" id="distance" value="15" min="0" class="w-full mt-1 bg-transparent border-b border-slate-300 focus:outline-none font-bold text-lg text-indigo-900">
+                    </div>
+                </div>
+
+                <div class="space-y-8">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            <div class="flex justify-between items-end mb-2">
+                                <div>
+                                    <label class="block font-bold text-sm text-slate-800">Athletic Events</label>
+                                </div>
+                                <div class="text-right">
+                                    <span id="athleticCountDisplay" class="text-lg font-black text-slate-700 block">0</span>
+                                </div>
+                            </div>
+                            <input type="range" id="athleticSlider" min="0" max="20" step="1" value="0" class="slider-filled w-full">
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-end mb-2">
+                                <div>
+                                    <label class="block font-bold text-sm text-slate-800">Candid Events</label>
+                                </div>
+                                <div class="text-right">
+                                    <span id="candidCountDisplay" class="text-lg font-black text-slate-700 block">0</span>
+                                </div>
+                            </div>
+                            <input type="range" id="candidSlider" min="0" max="20" step="1" value="0" class="slider-filled w-full">
+                        </div>
+                    </div>
+
+                    <hr class="border-slate-200">
+
+                    <div>
+                        <div class="flex justify-between items-end mb-1">
+                            <div>
+                                <label class="block font-bold text-sm text-slate-800">Cash Commission (1:1)</label>
+                                <span id="commLockMsg" class="hidden text-xs font-bold text-amber-600">🎯 Subsidized Baseline: <span id="commBaseText">$0</span></span>
+                            </div>
+                            <span id="commValueDisplay" class="text-lg font-black text-indigo-600">$0</span>
+                        </div>
+                        <div class="relative w-full">
+                            <div id="commMarker" class="baseline-marker hidden"></div>
+                            <input type="range" id="commSlider" min="0" max="10000" step="50" value="0" class="slider-filled w-full">
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-end mb-1">
+                            <label class="block font-bold text-sm text-slate-800">Culture Project (1:2)</label>
+                            <span id="cultValueDisplay" class="text-lg font-black text-indigo-600">$0</span>
+                        </div>
+                        <input type="range" id="cultSlider" min="0" max="10000" step="50" value="0" class="slider-filled w-full">
+                    </div>
+
+                    <div class="p-5 bg-emerald-50 rounded-xl border border-emerald-100">
+                        <div class="flex justify-between items-end mb-3">
+                            <div>
+                                <label class="block font-bold text-sm text-emerald-900">MyCady Store Credit (1:2)</label>
+                                <span id="delivLockMsg" class="hidden text-xs font-bold text-amber-600 block mt-1">🎯 Subsidized Baseline: <span id="delivBaseText">$0</span></span>
+                            </div>
+                            <span id="delivValueDisplay" class="text-2xl font-black text-emerald-700">$0</span>
+                        </div>
+                        <div class="relative w-full">
+                            <div id="delivMarker" class="baseline-marker hidden"></div>
+                            <input type="range" id="delivSlider" min="0" max="10000" step="50" value="0" class="slider-filled w-full">
+                        </div>
+                        
+                        <div id="purchaseCodeContainer" class="mt-6 hidden bg-white border-2 border-emerald-200 py-4 px-6 rounded-lg shadow-sm text-center">
+                            <span class="text-xs text-slate-500 uppercase font-bold block mb-2 tracking-widest">Apply at MyCADY School Portal Checkout:</span>
+                            <span id="purchaseCodeOutput" class="text-3xl font-mono font-black text-emerald-600 tracking-widest"></span>
+                            <span id="entitlementMsg" class="hidden text-xs text-amber-600 font-bold block mt-2">Includes Grandfathered Entitlement Bundle</span>
+                        </div>
+                    </div>
+
+                    <button onclick="addSchoolToDeal()" class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-lg rounded-xl shadow-lg transition-colors flex justify-center items-center">
+                        ➕ Add School to Deal
+                    </button>
+                </div>
+            </div>
+
+            <div id="cartSection" class="hidden bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <h2 class="text-lg font-bold mb-4">Schools in this Deal</h2>
+                <div id="cartList" class="space-y-3">
+                    </div>
+            </div>
+
+        </div>
+
+        <div class="w-full lg:w-1/3">
+            <div class="bg-slate-900 text-white p-6 rounded-2xl shadow-xl sticky top-24 border border-slate-800" id="scoreboardCard">
+                <h3 class="text-sm font-bold text-indigo-400 uppercase tracking-widest mb-6 text-center">Grand Deal Scoreboard</h3>
+                
+                <div class="mb-6 text-center">
+                    <div class="text-slate-400 text-xs mb-1 font-bold uppercase">Total Deal Budget Limit</div>
+                    <div id="megaBudgetDisplay" class="text-5xl font-black tracking-tight">$0</div>
+                </div>
+
+                <div class="mb-8">
+                    <div class="flex justify-between text-xs font-bold mb-2">
+                        <span class="text-slate-400">Total Budget Used</span>
+                        <span id="pctUsedDisplay" class="text-white">0%</span>
+                    </div>
+                    <div class="w-full bg-slate-800 rounded-full h-4 overflow-hidden shadow-inner">
+                        <div id="budgetProgressBar" class="bg-indigo-500 h-4 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <div class="text-xs font-bold text-slate-400 mb-1 text-center uppercase tracking-wider">Unspent Internal Margin</div>
+                    <div id="kpiMargin" class="text-2xl font-bold text-white text-center mb-1">$0</div>
+                    <div class="text-[10px] text-slate-500 text-center px-4">Calculated based on actual internal cost savings vs standard target cost (includes legacy subsidies).</div>
+                </div>
+
+                <div class="bg-slate-800 rounded-xl p-5 border border-emerald-500/50 transition-colors duration-300 shadow-lg relative overflow-hidden" id="deltaBox">
+                    <div class="text-xs font-bold text-emerald-400 mb-1 text-center uppercase tracking-wider">Your Total Est. Bonus (15% Cut)</div>
+                    <div id="kpiBonusTotal" class="text-5xl font-black text-emerald-400 text-center transition-colors duration-300">$0</div>
+                    
+                    <div class="flex justify-between mt-5 border-t border-emerald-500/30 pt-4">
+                        <div>
+                            <span class="block text-emerald-200/70 text-[10px] uppercase font-bold tracking-wider">Upfront (50%)</span>
+                            <span class="font-bold text-emerald-300 text-xl" id="kpiUpfront">$0</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="block text-emerald-200/70 text-[10px] uppercase font-bold tracking-wider">Yr-End True-Up</span>
+                            <span class="font-bold text-emerald-300 text-xl" id="kpiBackend">$0</span>
+                        </div>
+                    </div>
+
+                    <div id="kpiStatus" class="mt-4 text-center text-[10px] font-bold uppercase tracking-widest text-emerald-400 transition-colors duration-300">✅ Deal is Healthy</div>
+                </div>
+                
+                <div class="mt-6 border-t border-slate-800 pt-6">
+                    <div class="text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">Value vs Internal Cost Roll-up</div>
+                    <div class="h-32 w-full">
+                        <canvas id="valueCostChart"></canvas>
+                    </div>
+                </div>
+
+                <button class="w-full mt-6 py-3 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white font-bold text-sm rounded-lg transition-colors">
+                    📤 Send Payload to Salesforce
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // DOM Elements
+        const elDistrict = document.getElementById('districtSelect');
+        const elSchoolName = document.getElementById('schoolName');
+        const elDealType = document.getElementById('dealType');
+        const elHistoricalRevBox = document.getElementById('historicalRevBox');
+        const elHistoricalRev = document.getElementById('historicalRev');
+        const elHistComm = document.getElementById('histComm');
+        const elHistDeliv = document.getElementById('histDeliv');
+        
+        const elTotalStudents = document.getElementById('totalStudents');
+        const elEnrollment = document.getElementById('enrollment');
+        const elFrLunch = document.getElementById('frLunch');
+        const elDistance = document.getElementById('distance');
+        
+        const elAthleticSlider = document.getElementById('athleticSlider');
+        const elCandidSlider = document.getElementById('candidSlider');
+        const elCommSlider = document.getElementById('commSlider');
+        const elCultSlider = document.getElementById('cultSlider');
+        const elDelivSlider = document.getElementById('delivSlider');
+        
+        const cartSection = document.getElementById('cartSection');
+        const cartList = document.getElementById('cartList');
+
+        let valueCostChartInstance = null;
+        let dealCart = []; 
+
+        const schoolsByDistrict = {
+            "1.2": ["Winter Park High School", "Boone High School", "Edgewater High School"],
+            "1.0": ["Milton High School", "Alpharetta High School", "Roswell High School"],
+            "0.85": ["North Gwinnett High School", "Brookwood High School", "Peachtree Ridge High School"]
+        };
+
+        const ATHLETIC_COST = 500;
+        const CANDID_COST = 450;
+        const EVENT_MULTIPLIER = 1.5;
+        const COMMISSION_RATE = 0.15; 
+
+        function formatCurrency(num) {
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(num);
+        }
+
+        function populateSchools() {
+            const districtVal = elDistrict.value;
+            const schools = schoolsByDistrict[districtVal] || [];
+            elSchoolName.innerHTML = '';
+            schools.forEach(school => {
+                const opt = document.createElement('option');
+                opt.value = school;
+                opt.innerText = school;
+                elSchoolName.appendChild(opt);
+            });
+        }
+
+        // Toggle Renewal Mode UI and Pre-Fill Explicit Sliders
+        function applyRenewalBaselines() {
+            if(elDealType.value === 'renewal') {
+                elHistoricalRevBox.classList.remove('hidden');
+                
+                const histComm = parseFloat(elHistComm.value) || 0;
+                const histDeliv = parseFloat(elHistDeliv.value) || 0;
+
+                if (histComm > 0) {
+                    document.getElementById('commLockMsg').classList.remove('hidden');
+                    document.getElementById('commMarker').classList.remove('hidden');
+                } else {
+                    document.getElementById('commLockMsg').classList.add('hidden');
+                    document.getElementById('commMarker').classList.add('hidden');
+                }
+
+                if (histDeliv > 0) {
+                    document.getElementById('delivLockMsg').classList.remove('hidden');
+                    document.getElementById('delivMarker').classList.remove('hidden');
+                    document.getElementById('entitlementMsg').classList.remove('hidden');
+                } else {
+                    document.getElementById('delivLockMsg').classList.add('hidden');
+                    document.getElementById('delivMarker').classList.add('hidden');
+                    document.getElementById('entitlementMsg').classList.add('hidden');
+                }
+                
+                // Pre-fill sliders to explicit baseline
+                elCommSlider.value = histComm;
+                elDelivSlider.value = histDeliv;
+                
+            } else {
+                elHistoricalRevBox.classList.add('hidden');
+                document.getElementById('commLockMsg').classList.add('hidden');
+                document.getElementById('delivLockMsg').classList.add('hidden');
+                document.getElementById('commMarker').classList.add('hidden');
+                document.getElementById('delivMarker').classList.add('hidden');
+                document.getElementById('entitlementMsg').classList.add('hidden');
+                elHistComm.value = 0;
+                elHistDeliv.value = 0;
+                elHistoricalRev.value = 0;
+                elCommSlider.value = 0;
+                elDelivSlider.value = 0;
+            }
+            updateDashboard();
+        }
+
+        elDealType.addEventListener('change', applyRenewalBaselines);
+        elHistComm.addEventListener('change', applyRenewalBaselines);
+        elHistDeliv.addEventListener('change', applyRenewalBaselines);
+
+        function getCurrentFormState() {
+            const districtMult = parseFloat(elDistrict.value) || 1.0;
+            const totalStudents = parseFloat(elTotalStudents.value) || 0;
+            const seniorEnrollment = parseFloat(elEnrollment.value) || 0;
+            const frLunchPct = parseFloat(elFrLunch.value) || 0;
+            const distance = parseFloat(elDistance.value) || 0;
+            const sName = elSchoolName.value || "Unnamed School";
+            const dealType = elDealType.value;
+            const histRev = parseFloat(elHistoricalRev.value) || 0;
+            
+            // Standard Budget Math
+            const baseRev = (seniorEnrollment * 30) + (totalStudents * 5);
+            const frMultiplier = 1 - (frLunchPct / 150); 
+            
+            let distMultiplier = 1.0;
+            if (distance <= 20) distMultiplier = 1.10;      
+            else if (distance > 60) distMultiplier = 0.85;  
+            
+            const standardBudget = Math.max(0, baseRev * frMultiplier * districtMult * distMultiplier);
+            
+            // Legacy Subsidy Logic (Based on EXPLICIT expectations)
+            let baselineComm = 0;
+            let baselineDeliv = 0;
+            let internalCostSubsidy = 0;
+            let revenueBoost = 0;
+            
+            if (dealType === 'renewal') {
+                revenueBoost = histRev * 0.05; // 5% of historical revenue added to budget limit to give room
+                baselineComm = parseFloat(elHistComm.value) || 0;
+                baselineDeliv = parseFloat(elHistDeliv.value) || 0;
+                
+                // Subsidize the internal cost expectation to protect the rep's margin bonus
+                internalCostSubsidy = (baselineComm * 1.0) + (baselineDeliv * 0.5);
+            }
+            
+            // The Perceived Budget Limit includes the revenue boost + the perceived value of the baseline
+            const totalBudget = standardBudget + revenueBoost + baselineComm + baselineDeliv;
+            
+            // Target Internal Cost sets the baseline for the rep's bonus (assumes 60% allowable standard cost)
+            const targetInternalCost = (standardBudget * 0.60) + internalCostSubsidy;
+
+            // Gather Slider Values
+            const athleticCt = parseInt(elAthleticSlider.value) || 0;
+            const candidCt = parseInt(elCandidSlider.value) || 0;
+            const athleticValue = (athleticCt * ATHLETIC_COST) * EVENT_MULTIPLIER;
+            const candidValue = (candidCt * CANDID_COST) * EVENT_MULTIPLIER;
+
+            const commValue = parseFloat(elCommSlider.value) || 0;
+            const cultValue = parseFloat(elCultSlider.value) || 0;
+            const delivValue = parseFloat(elDelivSlider.value) || 0;
+
+            const totalAllocatedValue = athleticValue + candidValue + commValue + cultValue + delivValue;
+            const totalInternalCost = (athleticCt * ATHLETIC_COST) + (candidCt * CANDID_COST) + (commValue * 1.0) + (cultValue * 0.5) + (delivValue * 0.5);
+            
+            return {
+                schoolName: sName,
+                dealType: dealType,
+                baselineComm: baselineComm,
+                baselineDeliv: baselineDeliv,
+                totalBudget: totalBudget,
+                targetInternalCost: targetInternalCost,
+                totalAllocatedValue: totalAllocatedValue,
+                totalInternalCost: totalInternalCost,
+                eventsCostTotal: (athleticCt * ATHLETIC_COST) + (candidCt * CANDID_COST),
+                eventsValueTotal: athleticValue + candidValue,
+                commCost: commValue * 1.0,
+                commValue: commValue,
+                cultCost: cultValue * 0.5,
+                cultValue: cultValue,
+                delivCost: delivValue * 0.5,
+                delivValue: delivValue,
+                athleticCt: athleticCt,
+                candidCt: candidCt
+            };
+        }
+
+        function updateDashboard() {
+            const current = getCurrentFormState();
+
+            // 1. Update Current School Limits
+            document.getElementById('currentSchoolBudget').innerText = formatCurrency(current.totalBudget);
+
+            // Dynamically Set Max Caps
+            elAthleticSlider.max = Math.max(15, Math.floor(current.totalBudget / (ATHLETIC_COST * EVENT_MULTIPLIER)));
+            elCandidSlider.max = Math.max(15, Math.floor(current.totalBudget / (CANDID_COST * EVENT_MULTIPLIER)));
+            elCommSlider.max = Math.max(current.totalBudget, current.baselineComm + 5000);
+            elCultSlider.max = Math.max(current.totalBudget, 10000);
+            elDelivSlider.max = Math.max(current.totalBudget, current.baselineDeliv + 5000);
+
+            // Update Marker Positions & Text
+            if(current.dealType === 'renewal') {
+                document.getElementById('commBaseText').innerText = formatCurrency(current.baselineComm);
+                document.getElementById('delivBaseText').innerText = formatCurrency(current.baselineDeliv);
+                
+                const commPct = elCommSlider.max > 0 ? (current.baselineComm / elCommSlider.max) * 100 : 0;
+                const delivPct = elDelivSlider.max > 0 ? (current.baselineDeliv / elDelivSlider.max) * 100 : 0;
+                
+                document.getElementById('commMarker').style.left = `calc(${commPct}% + (${12 - (commPct * 0.24)}px))`;
+                document.getElementById('delivMarker').style.left = `calc(${delivPct}% + (${12 - (delivPct * 0.24)}px))`;
+            }
+
+            // Fill Sliders
+            elAthleticSlider.style.setProperty('--value', (current.athleticCt/elAthleticSlider.max)*100 + '%');
+            document.getElementById('athleticCountDisplay').innerText = current.athleticCt;
+            elCandidSlider.style.setProperty('--value', (current.candidCt/elCandidSlider.max)*100 + '%');
+            document.getElementById('candidCountDisplay').innerText = current.candidCt;
+            
+            elCommSlider.style.setProperty('--value', (current.commValue/elCommSlider.max)*100 + '%');
+            document.getElementById('commValueDisplay').innerText = formatCurrency(current.commValue);
+
+            elCultSlider.style.setProperty('--value', (current.cultValue/elCultSlider.max)*100 + '%');
+            document.getElementById('cultValueDisplay').innerText = formatCurrency(current.cultValue);
+
+            elDelivSlider.style.setProperty('--value', (current.delivValue/elDelivSlider.max)*100 + '%');
+            document.getElementById('delivValueDisplay').innerText = formatCurrency(current.delivValue);
+
+            // KDU Code Display
+            const codeContainer = document.getElementById('purchaseCodeContainer');
+            if(current.delivValue > 0) {
+                codeContainer.classList.remove('hidden');
+                document.getElementById('purchaseCodeOutput').innerText = `KDU-${Math.floor(1000 + Math.random() * 9000)}`;
+            } else {
+                codeContainer.classList.add('hidden');
+            }
+
+            // 2. Aggregate Cart Data
+            let megaBudget = current.totalBudget;
+            let megaAllocatedValue = current.totalAllocatedValue;
+            let megaTargetInternalCost = current.targetInternalCost;
+            let megaActualInternalCost = current.totalInternalCost;
+
+            let aggCommCost = current.commCost; let aggCommVal = current.commValue;
+            let aggCultCost = current.cultCost; let aggCultVal = current.cultValue;
+            let aggEvtCost = current.eventsCostTotal; let aggEvtVal = current.eventsValueTotal;
+            let aggDelivCost = current.delivCost; let aggDelivVal = current.delivValue;
+
+            dealCart.forEach(school => {
+                megaBudget += school.totalBudget;
+                megaAllocatedValue += school.totalAllocatedValue;
+                megaTargetInternalCost += school.targetInternalCost;
+                megaActualInternalCost += school.totalInternalCost;
+
+                aggCommCost += school.commCost; aggCommVal += school.commValue;
+                aggCultCost += school.cultCost; aggCultVal += school.cultValue;
+                aggEvtCost += school.eventsCostTotal; aggEvtVal += school.eventsValueTotal;
+                aggDelivCost += school.delivCost; aggDelivVal += school.delivValue;
+            });
+
+            // 3. Scoreboard Math
+            document.getElementById('megaBudgetDisplay').innerText = formatCurrency(megaBudget);
+            
+            // Unspent Margin is calculated based on Internal Cost Savings vs the Target Cost
+            const megaUnspentMargin = megaTargetInternalCost - megaActualInternalCost; 
+            const repBonusTotal = megaUnspentMargin * COMMISSION_RATE;
+            const pctUsed = megaBudget > 0 ? (megaAllocatedValue / megaBudget) * 100 : 0;
+
+            document.getElementById('kpiMargin').innerText = formatCurrency(megaUnspentMargin);
+            document.getElementById('kpiBonusTotal').innerText = formatCurrency(repBonusTotal);
+            document.getElementById('kpiUpfront').innerText = formatCurrency(repBonusTotal * 0.5);
+            document.getElementById('kpiBackend').innerText = formatCurrency(repBonusTotal * 0.5);
+            document.getElementById('pctUsedDisplay').innerText = Math.round(pctUsed) + '%';
+            
+            const progressBar = document.getElementById('budgetProgressBar');
+            const deltaBox = document.getElementById('deltaBox');
+            const kpiStatus = document.getElementById('kpiStatus');
+            const kpiBonusText = document.getElementById('kpiBonusTotal');
+            const kpiUpfrontText = document.getElementById('kpiUpfront');
+            const kpiBackendText = document.getElementById('kpiBackend');
+
+            progressBar.style.width = Math.min(pctUsed, 100) + '%';
+
+            // Visual Guardrails
+            if (megaUnspentMargin < 0) {
+                progressBar.className = "bg-red-500 h-4 rounded-full transition-all duration-300";
+                deltaBox.className = "bg-slate-800 rounded-xl p-5 border border-red-500 animate-pulse";
+                kpiStatus.innerText = "❌ OVER BUDGET - COMMISSION PENALTY";
+                kpiStatus.className = "mt-4 text-[10px] text-center font-bold uppercase tracking-widest text-red-400";
+                kpiBonusText.className = "text-5xl font-black text-red-400 text-center";
+                kpiUpfrontText.className = "font-bold text-red-400 text-xl";
+                kpiBackendText.className = "font-bold text-red-400 text-xl";
+            } else if (pctUsed > 85) {
+                progressBar.className = "bg-amber-400 h-4 rounded-full transition-all duration-300";
+                deltaBox.className = "bg-slate-800 rounded-xl p-5 border border-amber-500 shadow-lg";
+                kpiStatus.innerText = "⚠️ APPROACHING BUDGET LIMIT";
+                kpiStatus.className = "mt-4 text-[10px] text-center font-bold uppercase tracking-widest text-amber-400";
+                kpiBonusText.className = "text-5xl font-black text-amber-400 text-center";
+                kpiUpfrontText.className = "font-bold text-emerald-300 text-xl";
+                kpiBackendText.className = "font-bold text-emerald-300 text-xl";
+            } else {
+                progressBar.className = "bg-indigo-500 h-4 rounded-full transition-all duration-300";
+                deltaBox.className = "bg-slate-800 rounded-xl p-5 border border-emerald-500/50 shadow-lg";
+                kpiStatus.innerText = "✅ DEAL IS HEALTHY";
+                kpiStatus.className = "mt-4 text-[10px] text-center font-bold uppercase tracking-widest text-emerald-400";
+                kpiBonusText.className = "text-5xl font-black text-emerald-400 text-center";
+                kpiUpfrontText.className = "font-bold text-emerald-300 text-xl";
+                kpiBackendText.className = "font-bold text-emerald-300 text-xl";
+            }
+
+            updateChart(aggCommCost, aggCommVal, aggCultCost, aggCultVal, aggDelivCost, aggDelivVal, aggEvtCost, aggEvtVal);
+        }
+
+        function addSchoolToDeal() {
+            const current = getCurrentFormState();
+            dealCart.push(current);
+            renderCart();
+            
+            elSchoolName.selectedIndex = 0;
+            elDealType.value = "new";
+            elDealType.dispatchEvent(new Event('change'));
+            elAthleticSlider.value = 0; elCandidSlider.value = 0;
+            elCommSlider.value = 0; elCultSlider.value = 0; elDelivSlider.value = 0;
+            
+            updateDashboard();
+        }
+
+        function removeSchoolFromDeal(index) {
+            dealCart.splice(index, 1);
+            renderCart();
+            updateDashboard();
+        }
+
+        function renderCart() {
+            if (dealCart.length > 0) {
+                cartSection.classList.remove('hidden');
+                cartList.innerHTML = '';
+                dealCart.forEach((school, index) => {
+                    const tag = school.dealType === 'renewal' ? '<span class="ml-2 bg-amber-100 text-amber-800 text-[10px] px-2 py-0.5 rounded uppercase font-bold">Legacy</span>' : '';
+                    const html = `
+                        <div class="flex justify-between items-center p-4 bg-slate-50 border border-slate-200 rounded-lg">
+                            <div>
+                                <div class="font-bold text-slate-800 text-sm">${school.schoolName} ${tag}</div>
+                                <div class="text-xs text-slate-500">Value Given: ${formatCurrency(school.totalAllocatedValue)}</div>
+                            </div>
+                            <button onclick="removeSchoolFromDeal(${index})" class="text-slate-400 hover:text-red-500 transition-colors">🗑️</button>
+                        </div>
+                    `;
+                    cartList.insertAdjacentHTML('beforeend', html);
+                });
+            } else {
+                cartSection.classList.add('hidden');
+            }
+        }
+
+        function resetEntireDeal() {
+            dealCart = [];
+            renderCart();
+            elDistrict.value = "1.0";
+            populateSchools(); 
+            elDealType.value = "new";
+            elDealType.dispatchEvent(new Event('change'));
+            elAthleticSlider.value = 0; elCandidSlider.value = 0;
+            elCommSlider.value = 0; elCultSlider.value = 0; elDelivSlider.value = 0;
+            updateDashboard();
+        }
+
+        function updateChart(commCost, commValue, cultCost, cultValue, delivCost, delivValue, eventsCost, eventsValue) {
+            const ctx = document.getElementById('valueCostChart').getContext('2d');
+            const dataCost = [commCost, cultCost, eventsCost, delivCost];
+            const dataValue = [commValue, cultValue, eventsValue, delivValue]; 
+
+            Chart.defaults.color = '#94a3b8';
+
+            if (valueCostChartInstance) {
+                valueCostChartInstance.data.datasets[0].data = dataCost;
+                valueCostChartInstance.data.datasets[1].data = dataValue;
+                valueCostChartInstance.update();
+            } else {
+                valueCostChartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Commission', 'Culture', 'Events', 'MyCady'],
+                        datasets: [
+                            { label: 'Int. Cost', data: dataCost, backgroundColor: '#64748b', borderRadius: 4 },
+                            { label: 'Value', data: dataValue, backgroundColor: '#818cf8', borderRadius: 4 }
+                        ]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, scales: { y: { display: false }, x: { grid: { display: false } } }, plugins: { legend: { display: false } } }
+                });
+            }
+        }
+
+        elDistrict.addEventListener('change', () => { populateSchools(); updateDashboard(); });
+        [elSchoolName, elTotalStudents, elEnrollment, elFrLunch, elDistance, elHistoricalRev, elAthleticSlider, elCandidSlider, elCommSlider, elCultSlider, elDelivSlider].forEach(input => {
+            input.addEventListener('input', updateDashboard);
+        });
+
+        populateSchools();
+        calculateDashboard = updateDashboard; 
+        updateDashboard();
+    </script>
+</body>
+</html>
